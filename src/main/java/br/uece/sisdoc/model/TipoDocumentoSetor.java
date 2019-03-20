@@ -25,11 +25,11 @@ public class TipoDocumentoSetor {
 	@Column(name = "id_tipo_documento_setor", nullable = false)
 	private Long id;
 	
-	@ManyToOne(fetch = FetchType.LAZY)
+	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "setor_id", referencedColumnName = "id_setor")
 	private Setor setor;
 	
-	@ManyToOne(fetch = FetchType.LAZY)
+	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "tipo_documento_id", referencedColumnName = "id_tipo_documento")
 	private TipoDocumento tipoDocumento;
 

@@ -5,10 +5,12 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import br.uece.sisdoc.model.Setor;
 import br.uece.sisdoc.repository.SetorRepository;
+import br.uece.sisdoc.specification.SetorSpecification;
 
 @Service
 public class SetorService {
@@ -48,7 +50,11 @@ public class SetorService {
 	
 	public Page<Setor> findAll(Pageable pageable, Setor setor) {
 		
-		return setorRepository.findAll(pageable);
+		SetorSpecification setorSpecification = new SetorSpecification();
+		
+		return setorRepository.findAll(Specification.where(
+				setorSpecification.filterByName(setor.getNome())
+		), pageable);
 	}
 	
 }

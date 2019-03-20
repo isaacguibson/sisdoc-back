@@ -24,7 +24,7 @@ public class Cargo {
 	@Column(name = "nome", nullable = false)
 	private String nome;
 	
-	@ManyToOne(fetch = FetchType.LAZY)
+	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "setor_id", referencedColumnName = "id_setor")
 	private Setor setor;
 
