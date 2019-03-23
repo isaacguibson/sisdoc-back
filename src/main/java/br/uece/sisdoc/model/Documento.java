@@ -14,6 +14,7 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.persistence.Transient;
 
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -48,7 +49,9 @@ public class Documento {
 	@Temporal(TemporalType.TIMESTAMP)
 	@DateTimeFormat(pattern = "dd/MM/yyyy HH:mm:ss")
 	private Date dataCriacao;
-
+	
+	@Transient
+	private int totalPages;
 	
 	//Getters e Setters
 	public Long getId() {
@@ -106,5 +109,12 @@ public class Documento {
 	public void setIdentificador(String identificador) {
 		this.identificador = identificador;
 	}
-	
+
+	public int getTotalPages() {
+		return totalPages;
+	}
+
+	public void setTotalPages(int totalPages) {
+		this.totalPages = totalPages;
+	}
 }

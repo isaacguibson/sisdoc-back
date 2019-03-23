@@ -5,6 +5,9 @@ import java.io.FileOutputStream;
 import java.util.Calendar;
 import java.util.Optional;
 
+import javax.transaction.Transactional;
+
+import org.hibernate.engine.transaction.jta.platform.internal.SynchronizationRegistryBasedSynchronizationStrategy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,11 +33,12 @@ import br.uece.sisdoc.model.Usuario;
 import br.uece.sisdoc.repository.DocumentoRepository;
 import br.uece.sisdoc.repository.TipoDocumentoRepository;
 import br.uece.sisdoc.repository.UsuarioRepository;
+import br.uece.sisdoc.utils.HeaderFooterPageEvent;
 
 @Service
 public class DocumentoService {
 	
-	private final static int INIT_TEXT = 100;
+	private final static int INIT_TEXT = 80;
 	
 	@Autowired
 	DocumentoRepository documentoRepository;
@@ -67,10 +71,18 @@ public class DocumentoService {
 			Document document = new Document();
 			PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream(file));
 			
+//			HeaderFooterPageEvent event = new HeaderFooterPageEvent();
+//			writer.setPageEvent(event);
+			
 			document.open();
 			
-			generateHeader(writer, document, "Coordenação de Computação");
-			generateOficioBody(writer, document, documento);
+			generateHeader(writer, document, documento.getUsuario().getSetor().getNome());
+			int pageNumber = generateOficioBody(writer, document, documento);
+			documento.setTotalPages(pageNumber);
+//			generateFooter(writer, document, documento);
+			
+			HeaderFooterPageEvent event = new HeaderFooterPageEvent(documento);
+			writer.setPageEvent(event);
 			
 //			Font font = FontFactory.getFont(FontFactory.COURIER, 16, BaseColor.BLACK);
 //			Chunk chunk = new Chunk(documento.getConteudo(), font);
@@ -146,7 +158,7 @@ public class DocumentoService {
 	}
 	
 	
-	protected void generateHeader(PdfWriter writer, Document document, String setor) {
+	protected int generateHeader(PdfWriter writer, Document document, String setor) {
 		String img_uece = "/home/isaac/dev/brasao_uece.jpg";
     	Image imageUece;
     	
@@ -185,12 +197,16 @@ public class DocumentoService {
     		canvas.lineTo(560, 740);
     		canvas.closePathStroke();
     		
+    		return document.getPageNumber();
+    		
     	} catch (Exception e) {
     		e.printStackTrace();
     	}
+    	
+    	return 0;
 	}
 	
-	protected void generateOficioBody(PdfWriter writer, Document document, Documento documento) {
+	protected int generateOficioBody(PdfWriter writer, Document document, Documento documento) {
 		
 		try {
 			Paragraph identificador = new Paragraph("Oficio N°: "+documento.getIdentificador());
@@ -212,6 +228,8 @@ public class DocumentoService {
 			document.add(new Phrase("\n"));
 			document.add(new Phrase("\n"));
 			document.add(new Phrase("\n"));
+			document.add(new Phrase("\n"));
+			document.add(new Phrase("\n"));
 			
 			
 			Paragraph conteudo = new Paragraph("Ilmos. Senhores\n" + 
@@ -224,7 +242,7 @@ public class DocumentoService {
 					"Fase do Vestibular 2013.2.\n\n" + 
 					"O acesso ao Campus será realizado por duas entradas: o portão principal para os candidatos " + 
 					"e fiscais que virão a pé, e o portão da Rua Betel, somente para pessoas AUTORIZADAS, que " + 
-					"entrarão com veículo.\n\n" + 
+					"entrarão com veículo.\n\n" +
 					"Salientamos que a entrada de outras pessoas para algum tipo de serviço, no dia e horário acima " + 
 					"citados, deve ser comunicada previamente à CEV, para que seja providenciada a identificação " + 
 					"para ingresso no Campus.\n\n" + 
@@ -234,6 +252,29 @@ public class DocumentoService {
 //			ColumnText.showTextAligned(writer.getDirectContent(), Element.ALIGN_JUSTIFIED, conteudo, 50, 640, 0);
 			
 			document.add(conteudo);
+			
+			return writer.getPageNumber();
+			
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+		return 0;
+		
+	}
+	
+	protected void generateFooter(PdfWriter writer, Document document, Documento documento) {
+		try {
+//			Paragraph footer =
+//					new Paragraph(documento.getUsuario().getTratamento()+" "+documento.getUsuario().getNome() + "\n"+
+//									documento.getUsuario().getCargo().getNome() + " do " + documento.getUsuario().getSetor().getNome() + " da UECE."
+//								);
+//			
+//			footer.setAlignment(Element.ALIGN_CENTER);
+//			document.add(footer);
+			
+			HeaderFooterPageEvent event = new HeaderFooterPageEvent(documento);
+			writer.setPageEvent(event);
 			
 		} catch(Exception e) {
 			e.printStackTrace();
