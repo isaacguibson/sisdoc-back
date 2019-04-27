@@ -232,21 +232,7 @@ public class DocumentoService {
 			document.add(new Phrase("\n"));
 			
 			
-			Paragraph conteudo = new Paragraph("Ilmos. Senhores\n" + 
-					"Vice-Reitor, Pró-Reitores,\n" + 
-					"Diretores de Centros e Faculdades, Instituto,\n" + 
-					"Departamentos Administrativos e outros\n" + 
-					"Prezados (as) Senhores (as):\n\n" + 
-					"Informamos a V.Sa. que o Campus do Itaperi ficará interditado nos dias 16/06/2013 (domingo) e" + 
-					"17/06/2013 (segunda-feira), no período das 6h às 15h, tendo em vista a aplicação das provas da 2a " + 
-					"Fase do Vestibular 2013.2.\n\n" + 
-					"O acesso ao Campus será realizado por duas entradas: o portão principal para os candidatos " + 
-					"e fiscais que virão a pé, e o portão da Rua Betel, somente para pessoas AUTORIZADAS, que " + 
-					"entrarão com veículo.\n\n" +
-					"Salientamos que a entrada de outras pessoas para algum tipo de serviço, no dia e horário acima " + 
-					"citados, deve ser comunicada previamente à CEV, para que seja providenciada a identificação " + 
-					"para ingresso no Campus.\n\n" + 
-					"Atenciosamente,");
+			Paragraph conteudo = new Paragraph(documento.getConteudo());
 			
 			conteudo.setAlignment(Element.ALIGN_JUSTIFIED);
 //			ColumnText.showTextAligned(writer.getDirectContent(), Element.ALIGN_JUSTIFIED, conteudo, 50, 640, 0);
