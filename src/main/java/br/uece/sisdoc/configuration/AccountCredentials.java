@@ -1,5 +1,8 @@
 package br.uece.sisdoc.configuration;
 
+/*
+ * Credenciais usadas na captura do token JWT 
+ */
 public class AccountCredentials {
 
 	private String username;

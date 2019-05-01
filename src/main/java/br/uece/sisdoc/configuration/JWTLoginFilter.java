@@ -7,6 +7,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -16,6 +17,8 @@ import org.springframework.security.web.authentication.AbstractAuthenticationPro
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import br.uece.sisdoc.model.Usuario;
 
 //filtra requisições de login
 public class JWTLoginFilter extends AbstractAuthenticationProcessingFilter {
@@ -38,8 +41,9 @@ public class JWTLoginFilter extends AbstractAuthenticationProcessingFilter {
         AccountCredentials credentials = new ObjectMapper().readValue(httpServletRequest.getInputStream(), AccountCredentials.class);
 
         UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(credentials.getUsername(), credentials.getPassword());
-
-        return getAuthenticationManager().authenticate(token);
+        Authentication auth = getAuthenticationManager().authenticate(token);
+        
+        return auth;
 
     }
 
@@ -57,10 +61,42 @@ public class JWTLoginFilter extends AbstractAuthenticationProcessingFilter {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         
+        CustomUserPrincipal customUserPrincipal = (CustomUserPrincipal) authentication.getPrincipal();
+        
         jsonResponse.put("JWT", response.getHeader("Authorization"));
+        jsonResponse.put("usuario", getUsuarioJson(customUserPrincipal.getUsuario()));
+        jsonResponse.put("permissoes", getPermissoesJson(customUserPrincipal.getUsuario()));
         
         response.getWriter().write(jsonResponse.toString());
 
+    }
+    
+    private JSONObject getUsuarioJson(Usuario usuario) {
+    	
+    	JSONObject jsonUsuario = new JSONObject();
+        jsonUsuario.put("email", usuario.getEmail());
+        jsonUsuario.put("nome", usuario.getNome());
+        jsonUsuario.put("tratamento", usuario.getTratamento());
+        jsonUsuario.put("cargo", usuario.getCargo().getNome());
+        jsonUsuario.put("setor", usuario.getSetor().getNome());
+        
+        return jsonUsuario;
+    	
+    }
+    
+    private JSONArray getPermissoesJson(Usuario usuario) {
+    	
+    	JSONArray jsonArray = new JSONArray();
+    	
+    	JSONObject jsonPermissao = new JSONObject();
+    	jsonPermissao.put("nome", "incluir anexo");
+    	jsonPermissao.put("fullPath", "documento/incluir/anexo");
+    	jsonPermissao.put("path", "incluir/anexo");
+    	
+    	jsonArray.put(jsonPermissao);
+    	
+    	return jsonArray;
+    	
     }
 
 }

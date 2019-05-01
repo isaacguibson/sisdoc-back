@@ -3,16 +3,13 @@ package br.uece.sisdoc.utils;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.Element;
 import com.itextpdf.text.Paragraph;
-import com.itextpdf.text.Phrase;
 import com.itextpdf.text.pdf.CMYKColor;
 import com.itextpdf.text.pdf.ColumnText;
 import com.itextpdf.text.pdf.PdfContentByte;
-import com.itextpdf.text.pdf.PdfDocument;
 import com.itextpdf.text.pdf.PdfPageEventHelper;
 import com.itextpdf.text.pdf.PdfWriter;
 
 import br.uece.sisdoc.model.Documento;
-import ch.qos.logback.core.net.SyslogOutputStream;
 
 public class HeaderFooterPageEvent extends PdfPageEventHelper{
 

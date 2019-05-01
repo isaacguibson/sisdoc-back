@@ -5,6 +5,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import br.uece.sisdoc.dto.UsuarioDTO;
@@ -26,6 +27,9 @@ public class UsuarioService {
 	
 	@Autowired
 	CargoRepository cargoRepository;
+	
+	@Autowired
+	private PasswordEncoder passwordEncoder;
 	
 	public Usuario create(UsuarioDTO usuarioDTO) {
 		
@@ -66,7 +70,11 @@ public class UsuarioService {
 	public Page<Usuario> findAll(Pageable pageable, UsuarioDTO usuarioDTO) {
 		
 		return usuarioRepository.findAll(pageable);
-	}	
+	}
+	
+	public Usuario findByEmail(String email) {
+		return usuarioRepository.findByEmail(email);
+	}
 	
 	private Usuario dtoToUsuario(UsuarioDTO usuarioDTO) {
 		Usuario usuario = new Usuario();
@@ -83,7 +91,7 @@ public class UsuarioService {
 		
 		usuario.setNome(usuarioDTO.getNome());
 		usuario.setEmail(usuarioDTO.getEmail());
-		usuario.setSenha(usuarioDTO.getSenha());
+		usuario.setSenha(passwordEncoder.encode(usuarioDTO.getSenha()));
 		usuario.setTratamento(usuarioDTO.getTratamento());
 		
 		return usuario;

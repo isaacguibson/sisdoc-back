@@ -8,4 +8,6 @@ import br.uece.sisdoc.model.Usuario;
 @Repository
 public interface UsuarioRepository extends JpaRepository<Usuario, Long>, JpaSpecificationExecutor<Usuario>{
 
+	Usuario findByEmail(String email);
+	
 }
