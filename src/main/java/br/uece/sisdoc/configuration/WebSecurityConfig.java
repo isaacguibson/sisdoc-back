@@ -3,7 +3,6 @@ package br.uece.sisdoc.configuration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -26,9 +25,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 		http.headers().cacheControl();
 		
 		http.csrf().disable()
+			.antMatcher("/**")
 			.authorizeRequests()
-			.antMatchers("/").permitAll()
-			.antMatchers(HttpMethod.POST, "/login").permitAll()
+			.antMatchers("/login").permitAll()
 			.anyRequest().authenticated()
 			.and().sessionManagement().disable()
 			// filtra requisições de login

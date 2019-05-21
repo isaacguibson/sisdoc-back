@@ -37,7 +37,18 @@ public class JWTLoginFilter extends AbstractAuthenticationProcessingFilter {
     
     @Override
     public Authentication attemptAuthentication(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws AuthenticationException, IOException, ServletException {
-
+    	
+    	httpServletResponse.setHeader("Access-Control-Allow-Origin", "*");
+    	
+    	if(httpServletRequest.getMethod().equals("OPTIONS")) {
+    		
+    		httpServletResponse.setHeader("Access-Control-Allow-Headers", "*");
+    		httpServletResponse.setHeader("Access-Control-Allow-Methods", "POST, GET, PUT, OPTIONS, DELETE");
+    		httpServletResponse.setHeader("Access-Control-Max-Age", "3600");
+    		httpServletResponse.setStatus(200);
+    		return null;
+    	}
+    	
         AccountCredentials credentials = new ObjectMapper().readValue(httpServletRequest.getInputStream(), AccountCredentials.class);
 
         UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(credentials.getUsername(), credentials.getPassword());
