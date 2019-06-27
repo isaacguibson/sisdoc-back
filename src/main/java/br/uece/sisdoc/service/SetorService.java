@@ -1,5 +1,6 @@
 package br.uece.sisdoc.service;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,6 +56,11 @@ public class SetorService {
 		return setorRepository.findAll(Specification.where(
 				setorSpecification.filterByName(setor.getNome())
 		), pageable);
+	}
+	
+	public List<Setor> findAll() {
+		
+		return setorRepository.findAll();
 	}
 	
 }

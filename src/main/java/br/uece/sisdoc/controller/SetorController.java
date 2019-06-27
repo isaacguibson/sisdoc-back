@@ -1,5 +1,9 @@
 package br.uece.sisdoc.controller;
 
+import java.util.List;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -25,6 +29,25 @@ public class SetorController {
 	public Page<Setor> get(Pageable pageable, Setor setor) {
 		
 		return setorService.findAll(pageable, setor);
+	}
+	
+	@GetMapping("/listaSetores")
+	public String getAll() {
+		
+		JSONArray jsonArray = new JSONArray();
+		JSONObject jsonObject = new JSONObject();
+		
+		List<Setor> setores = setorService.findAll();
+		
+		for(Setor setor : setores) {
+			jsonObject = new JSONObject();
+			
+			jsonObject.put("id", setor.getId());
+			jsonObject.put("nome", setor.getNome());
+			jsonArray.put(jsonObject);
+		}
+		
+		return jsonArray.toString();
 	}
 	
 	@GetMapping("/{id}")
