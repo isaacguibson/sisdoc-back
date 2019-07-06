@@ -90,6 +90,7 @@ public class JWTLoginFilter extends AbstractAuthenticationProcessingFilter {
         jsonUsuario.put("tratamento", usuario.getTratamento());
         jsonUsuario.put("cargo", usuario.getCargo().getNome());
         jsonUsuario.put("setor", usuario.getSetor().getNome());
+        jsonUsuario.put("id", usuario.getId());
         
         return jsonUsuario;
     	

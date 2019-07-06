@@ -1,5 +1,7 @@
 package br.uece.sisdoc.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -25,6 +27,13 @@ public class TipoDocumentoController {
 	public Page<TipoDocumento> get(Pageable pageable, TipoDocumento tipoDocumento) {
 		
 		return tipoDocumentoService.findAll(pageable, tipoDocumento);
+		
+	}
+	
+	@GetMapping("/listAll")
+	public List<TipoDocumento> get() {
+		
+		return tipoDocumentoService.listAll();
 		
 	}
 	

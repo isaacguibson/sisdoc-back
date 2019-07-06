@@ -72,7 +72,7 @@ public class DocumentoController {
 	}
 	
 	
-	@PostMapping
+	@PostMapping("/oficio")
 	public Documento create(@RequestBody DocumentoDTO documento) {
 		
 		return documentoService.create(documento);

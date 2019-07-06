@@ -1,5 +1,6 @@
 package br.uece.sisdoc.service;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,6 +52,11 @@ public class TipoDocumentoService {
 	public Page<TipoDocumento> findAll(Pageable pageable, TipoDocumento tipoDocumento) {
 		
 		return tipoDocumentoRepository.findAll(pageable);
+	}
+	
+	public List<TipoDocumento> listAll() {
+		
+		return tipoDocumentoRepository.findAll();
 	}
 	
 }
