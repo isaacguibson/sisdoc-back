@@ -42,7 +42,7 @@ public class Documento {
 	@Column(name = "identificador", nullable = false)
 	private String identificador;
 	
-	@Column(name = "conteudo", nullable = false)
+	@Column(name = "conteudo", nullable = false, columnDefinition = "TEXT")
 	private String conteudo;
 	
 	@Column(name = "data_criacao", columnDefinition = "TIMESTAMP(6)", nullable = false)

@@ -2,6 +2,7 @@ package br.uece.sisdoc.service;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.StringReader;
 import java.util.Calendar;
 import java.util.Optional;
 
@@ -15,6 +16,7 @@ import com.itextpdf.text.Element;
 import com.itextpdf.text.Image;
 import com.itextpdf.text.Paragraph;
 import com.itextpdf.text.Phrase;
+import com.itextpdf.text.html.simpleparser.HTMLWorker;
 import com.itextpdf.text.pdf.CMYKColor;
 import com.itextpdf.text.pdf.ColumnText;
 import com.itextpdf.text.pdf.PdfContentByte;
@@ -200,6 +202,7 @@ public class DocumentoService {
     	return 0;
 	}
 	
+	@SuppressWarnings("deprecation")
 	protected int generateOficioBody(PdfWriter writer, Document document, Documento documento) {
 		
 		try {
@@ -226,12 +229,15 @@ public class DocumentoService {
 			document.add(new Phrase("\n"));
 			
 			
-			Paragraph conteudo = new Paragraph(documento.getConteudo());
+			HTMLWorker htmlWorker = new HTMLWorker(document);
+		    htmlWorker.parse(new StringReader(documento.getConteudo()));
 			
-			conteudo.setAlignment(Element.ALIGN_JUSTIFIED);
-//			ColumnText.showTextAligned(writer.getDirectContent(), Element.ALIGN_JUSTIFIED, conteudo, 50, 640, 0);
-			
-			document.add(conteudo);
+//			Paragraph conteudo = new Paragraph(documento.getConteudo());
+//			
+//			conteudo.setAlignment(Element.ALIGN_JUSTIFIED);
+////			ColumnText.showTextAligned(writer.getDirectContent(), Element.ALIGN_JUSTIFIED, conteudo, 50, 640, 0);
+//			
+//			document.add(conteudo);
 			
 			return writer.getPageNumber();
 			
