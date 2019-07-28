@@ -51,12 +51,11 @@ public class UsuarioController {
 		
 	}
 	
-	@DeleteMapping
-	public String delete(String texto) {
-		
-		System.out.println(texto);
-		
-		return texto;
+	
+	
+	@DeleteMapping("/{id}")
+	public void delete(@PathVariable Long id) {
+		usuarioService.delete(id);
 	}
 	
 }

@@ -46,6 +46,7 @@ public class CargoService {
 	public void delete(Long id) {
 		
 		cargoRepository.deleteById(id);
+		
 	}
 
 	public Cargo findById(Long id) {

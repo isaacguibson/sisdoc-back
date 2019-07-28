@@ -10,6 +10,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,7 +33,9 @@ public class DocumentoController {
 	@GetMapping
 	public Page<Documento> get(Pageable pageable, Documento documento) {
 		
-		return documentoService.findAll(pageable);
+		Page<Documento> pageReturn = documentoService.findAll(pageable);
+		
+		return pageReturn;
 	}
 	
 	@GetMapping("/{id}")
@@ -82,6 +85,12 @@ public class DocumentoController {
 	public Documento update(@RequestBody DocumentoDTO documento) {
 		
 		return documentoService.update(documento);
+	}
+	
+	@DeleteMapping("/{id}")
+	public void delete(@PathVariable Long id) {
+		
+		documentoService.delete(id);
 	}
 	
 }

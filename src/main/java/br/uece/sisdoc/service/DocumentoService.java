@@ -145,8 +145,11 @@ public class DocumentoService {
 			documento.setTipoDocumento(optionalTipoDocumento.get());
 		}
 		
-		documento.setCodigo(41L);
-		documento.setIdentificador(documento.getCodigo().toString()+'/'+calendar.get(Calendar.YEAR));
+		documento.setCodigo(generateCodDocumento()); //Nao esta no banco ainda
+		documento.setIdentificador(documento.getCodigo()+"/"+calendar.get(Calendar.YEAR));
+		
+		documentoDTO.setConteudo(documentoDTO.getConteudo().replaceAll("<p", "<p align='justify'")); //Justificando paragrafos
+		
 		documento.setConteudo(documentoDTO.getConteudo());
 		documento.setDataCriacao(calendar.getTime());
 		
@@ -297,6 +300,24 @@ public class DocumentoService {
 		default:
 			return "";
 		}
+	}
+	
+	private Long generateCodDocumento(){
+		
+		//Pegando data até o primeiro dia do ano posterior
+		Calendar calendar = Calendar.getInstance();
+//		calendar.add(Calendar.YEAR, 1);
+		calendar.set(Calendar.DAY_OF_MONTH, 1);
+		calendar.set(Calendar.MONTH, Calendar.JANUARY);
+		calendar.set(Calendar.YEAR, calendar.get(Calendar.YEAR) + 1);
+		
+		Long lastCodDocumento = documentoRepository.ultimoCodDocumento(calendar.getTime());
+		
+		if(lastCodDocumento == null) {
+			return 1L;
+		}
+		
+		return lastCodDocumento + 1;
 	}
 	
 }
