@@ -1,5 +1,6 @@
 package br.uece.sisdoc.repository;
 import java.util.Date;
+import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -17,5 +18,11 @@ public interface DocumentoRepository extends JpaRepository<Documento, Long>, Jpa
 	 * */
 	@Query(value = "SELECT MAX(doc.codigo) FROM Documento doc WHERE doc.dataCriacao < :dataFinal")
 	public Long ultimoCodDocumento(@Param("dataFinal") Date dataFinal);
+	
+	/**
+	 * Pega todos os documentos do usuario do parametro
+	 * */
+	@Query(value = "SELECT doc FROM Documento doc WHERE doc.usuario.id = :idUsuario")
+	public List<Documento> docsFromUser(@Param("idUsuario") Long idUsuario);
 	
 }

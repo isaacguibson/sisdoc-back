@@ -30,7 +30,7 @@ public class Documento {
 	
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "usuario_id", referencedColumnName = "id_usuario", nullable = false)
-	private Usuario usuario;
+	private Usuario usuario; /*Usuario que criou o documento*/
 	
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "tipo_documento_id", referencedColumnName = "id_tipo_documento", nullable = false)

@@ -9,6 +9,8 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import com.itextpdf.text.Document;
@@ -22,13 +24,17 @@ import com.itextpdf.text.pdf.ColumnText;
 import com.itextpdf.text.pdf.PdfContentByte;
 import com.itextpdf.text.pdf.PdfWriter;
 
+import br.uece.sisdoc.configuration.CustomUserDetailService;
+import br.uece.sisdoc.configuration.CustomUserPrincipal;
 import br.uece.sisdoc.dto.DocumentoDTO;
 import br.uece.sisdoc.model.Documento;
 import br.uece.sisdoc.model.TipoDocumento;
 import br.uece.sisdoc.model.Usuario;
 import br.uece.sisdoc.repository.DocumentoRepository;
 import br.uece.sisdoc.repository.TipoDocumentoRepository;
+import br.uece.sisdoc.repository.UsuarioDocumentoRepository;
 import br.uece.sisdoc.repository.UsuarioRepository;
+import br.uece.sisdoc.specification.DocumentoSpecification;
 import br.uece.sisdoc.utils.HeaderFooterPageEvent;
 
 @Service
@@ -40,10 +46,16 @@ public class DocumentoService {
 	DocumentoRepository documentoRepository;
 	
 	@Autowired
+	UsuarioDocumentoRepository usuarioDocumentoRepository;
+	
+	@Autowired
 	UsuarioRepository usuarioRepository;
 	
 	@Autowired
 	TipoDocumentoRepository tipoDocumentoRepository;
+
+	@Autowired
+	CustomUserDetailService customUserDetailService;
 	
 	
 	public Documento create(DocumentoDTO documentoDto) {
@@ -116,6 +128,31 @@ public class DocumentoService {
 	public Page<Documento> findAll(Pageable pageable) {
 		
 		return documentoRepository.findAll(pageable);
+	}
+	
+	
+	public Page<Documento> findAllFromUser(Pageable pageable, Long id, Authentication authentication) {
+		
+		CustomUserPrincipal customUserPrincipal = (CustomUserPrincipal) customUserDetailService.loadUserByUsername(authentication.getName());
+		
+		if(!customUserPrincipal.getUsuario().getId().equals(id)) {
+			return null;
+		}
+		
+		return documentoRepository.findAll(Specification.where(new DocumentoSpecification().filterByUserId(id)),
+				pageable);
+	}
+	
+	
+	public Page<Documento> findAllToUser(Pageable pageable, Long id, Authentication authentication) {
+		
+		CustomUserPrincipal customUserPrincipal = (CustomUserPrincipal) customUserDetailService.loadUserByUsername(authentication.getName());
+		
+		if(!customUserPrincipal.getUsuario().getId().equals(id)) {
+			return null;
+		}
+		
+		return usuarioDocumentoRepository.getDocumentosToUser(id, pageable);
 	}
 	
 	
