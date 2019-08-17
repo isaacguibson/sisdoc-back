@@ -55,7 +55,8 @@ public class SetorService {
 		
 		return setorRepository.findAll(Specification.where(
 				setorSpecification.filterByName(setor.getNome())
-		), pageable);
+		).and(setorSpecification.filterById(setor.getId())), 
+				pageable);
 	}
 	
 	public List<Setor> findAll() {

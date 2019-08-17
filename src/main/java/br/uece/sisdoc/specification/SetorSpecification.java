@@ -14,4 +14,11 @@ public class SetorSpecification {
 		
 	}
 	
+	public Specification<Setor> filterById(Long id){
+		
+		return id == null ? null : (root, criteriaQuery, criteriaBuilder) ->
+					criteriaBuilder.equal(root.get("id"), id);
+		
+	}
+	
 }

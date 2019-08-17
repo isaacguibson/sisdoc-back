@@ -5,6 +5,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import br.uece.sisdoc.dto.CargoDTO;
@@ -12,6 +13,7 @@ import br.uece.sisdoc.model.Cargo;
 import br.uece.sisdoc.model.Setor;
 import br.uece.sisdoc.repository.CargoRepository;
 import br.uece.sisdoc.repository.SetorRepository;
+import br.uece.sisdoc.specification.CargoSpecification;
 
 @Service
 public class CargoService {
@@ -63,7 +65,14 @@ public class CargoService {
 	
 	public Page<Cargo> findAll(Pageable pageable, CargoDTO cargoDto) {
 		
-		return cargoRepository.findAll(pageable);
+		CargoSpecification cargoSpecification = new CargoSpecification();
+		
+		return cargoRepository.findAll(Specification.where(
+					cargoSpecification.filterById(cargoDto.getId())
+				).and(cargoSpecification.filterByName(cargoDto.getNome()))
+				.and(cargoSpecification.filterBySetor(cargoDto.getSetorId())),
+				pageable);
+		
 	}
 	
 	
