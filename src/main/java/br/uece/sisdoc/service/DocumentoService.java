@@ -3,13 +3,16 @@ package br.uece.sisdoc.service;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.StringReader;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.domain.Specifications;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
@@ -125,13 +128,28 @@ public class DocumentoService {
 	}
 	
 	
-	public Page<Documento> findAll(Pageable pageable) {
+	public Page<Documento> findAll(Pageable pageable, DocumentoDTO documento) {
 		
-		return documentoRepository.findAll(pageable);
+		DocumentoSpecification docSpecification = new DocumentoSpecification();
+		
+		try {
+			Date dataInicial = new SimpleDateFormat("yyyy-MM-dd").parse(documento.getDataInicial());  
+			Date dataFinal= new SimpleDateFormat("yyyy-MM-dd").parse(documento.getDataFinal());  
+		
+			return documentoRepository.findAll(Specification.where(
+						docSpecification.filterByIdentificador(documento.getIdentificador())
+					).and(docSpecification.filterByTipo(documento.getTipoDocumentoId()))
+					.and(docSpecification.filterByDate(dataInicial, dataFinal))
+					,pageable);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return null;
 	}
 	
 	
-	public Page<Documento> findAllFromUser(Pageable pageable, Long id, Authentication authentication) {
+	public Page<Documento> findAllFromUser(Pageable pageable, Long id, Authentication authentication, DocumentoDTO documento) {
 		
 		CustomUserPrincipal customUserPrincipal = (CustomUserPrincipal) customUserDetailService.loadUserByUsername(authentication.getName());
 		
@@ -139,8 +157,33 @@ public class DocumentoService {
 			return null;
 		}
 		
-		return documentoRepository.findAll(Specification.where(new DocumentoSpecification().filterByUserId(id)),
-				pageable);
+		DocumentoSpecification docSpecification = new DocumentoSpecification();
+		
+		try {
+			
+			Date dataInicial = null;
+			Date dataFinal = null;
+			
+			if(documento.getDataInicial() != null) {
+				dataInicial = new SimpleDateFormat("yyyy-MM-dd").parse(documento.getDataInicial());
+			}
+			
+			if(documento.getDataFinal() != null) {
+				dataFinal = new SimpleDateFormat("yyyy-MM-dd").parse(documento.getDataFinal());
+			}
+			
+			return documentoRepository.findAll(Specification.where(
+						docSpecification.filterByUserId(id)
+					).and(docSpecification.filterByTipo(documento.getTipoDocumentoId()))
+					.and(docSpecification.filterByDate(dataInicial, dataFinal))
+					.and(docSpecification.filterByIdentificador(documento.getIdentificador()))
+					,pageable);
+		
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+		return null;
 	}
 	
 	

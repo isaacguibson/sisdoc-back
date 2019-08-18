@@ -1,14 +1,22 @@
 package br.uece.sisdoc.dto;
 
+import java.util.Date;
+
 public class DocumentoDTO {
 
 	private Long id;
+	
+	private String identificador;
 	
 	private Long usuarioId;
 	
 	private Long tipoDocumentoId;
 	
 	private String conteudo;
+	
+	private String dataInicial;
+	
+	private String dataFinal;
 
 	public Long getId() {
 		return id;
@@ -41,5 +49,30 @@ public class DocumentoDTO {
 	public void setConteudo(String conteudo) {
 		this.conteudo = conteudo;
 	}
+
+	public String getDataInicial() {
+		return dataInicial;
+	}
+
+	public void setDataInicial(String dataInicial) {
+		this.dataInicial = dataInicial;
+	}
+
+	public String getDataFinal() {
+		return dataFinal;
+	}
+
+	public void setDataFinal(String dataFinal) {
+		this.dataFinal = dataFinal;
+	}
+
+	public String getIdentificador() {
+		return identificador;
+	}
+
+	public void setIdentificador(String identificador) {
+		this.identificador = identificador;
+	}
+	
 }
 

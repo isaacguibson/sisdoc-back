@@ -39,17 +39,17 @@ public class DocumentoController {
 	UsuarioDocumentoService usuarioDocumentoService;
 	
 	@GetMapping
-	public Page<Documento> get(Pageable pageable, Documento documento) {
+	public Page<Documento> get(Pageable pageable, DocumentoDTO documentoDTO) {
 		
-		Page<Documento> pageReturn = documentoService.findAll(pageable);
+		Page<Documento> pageReturn = documentoService.findAll(pageable, documentoDTO);
 		
 		return pageReturn;
 	}
 	
 	@GetMapping("from-user/{id}")
-	public Page<Documento> getFromUser(Pageable pageable, @PathVariable Long id, Authentication authentication) {
+	public Page<Documento> getFromUser(Pageable pageable, @PathVariable Long id, Authentication authentication, DocumentoDTO documentoDTO) {
 		
-		Page<Documento> pageReturn = documentoService.findAllFromUser(pageable, id, authentication);
+		Page<Documento> pageReturn = documentoService.findAllFromUser(pageable, id, authentication, documentoDTO);
 		
 		return pageReturn;
 	}

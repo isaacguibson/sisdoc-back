@@ -6,10 +6,12 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import br.uece.sisdoc.model.TipoDocumento;
 import br.uece.sisdoc.repository.TipoDocumentoRepository;
+import br.uece.sisdoc.specification.TipoDocumentoSpecification;
 
 @Service
 public class TipoDocumentoService {
@@ -51,7 +53,12 @@ public class TipoDocumentoService {
 
 	public Page<TipoDocumento> findAll(Pageable pageable, TipoDocumento tipoDocumento) {
 		
-		return tipoDocumentoRepository.findAll(pageable);
+		TipoDocumentoSpecification tipoDocSpecification = new TipoDocumentoSpecification();
+		
+		return tipoDocumentoRepository.findAll(Specification.where(
+				tipoDocSpecification.filterById(tipoDocumento.getId())
+				).and(tipoDocSpecification.filterByName(tipoDocumento.getNome()))
+				, pageable);
 	}
 	
 	public List<TipoDocumento> listAll() {
