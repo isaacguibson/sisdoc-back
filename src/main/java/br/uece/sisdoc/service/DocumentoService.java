@@ -187,7 +187,7 @@ public class DocumentoService {
 	}
 	
 	
-	public Page<Documento> findAllToUser(Pageable pageable, Long id, Authentication authentication) {
+	public Page<Documento> findAllToUser(Pageable pageable, Long id, Authentication authentication, DocumentoDTO documento) {
 		
 		CustomUserPrincipal customUserPrincipal = (CustomUserPrincipal) customUserDetailService.loadUserByUsername(authentication.getName());
 		
@@ -195,7 +195,34 @@ public class DocumentoService {
 			return null;
 		}
 		
-		return usuarioDocumentoRepository.getDocumentosToUser(id, pageable);
+		DocumentoSpecification docSpecification = new DocumentoSpecification();
+		
+		try {
+			
+			Date dataInicial = null;
+			Date dataFinal = null;
+			
+			if(documento.getDataInicial() != null) {
+				dataInicial = new SimpleDateFormat("yyyy-MM-dd").parse(documento.getDataInicial());
+			}
+			
+			if(documento.getDataFinal() != null) {
+				dataFinal = new SimpleDateFormat("yyyy-MM-dd").parse(documento.getDataFinal());
+			}
+			
+			return documentoRepository.findAll(Specification.where(
+					docSpecification.filterToUserId(id)
+				).and(docSpecification.filterByTipo(documento.getTipoDocumentoId()))
+				.and(docSpecification.filterByDate(dataInicial, dataFinal))
+				.and(docSpecification.filterByIdentificador(documento.getIdentificador()))
+				,pageable);
+			
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return null;
 	}
 	
 	

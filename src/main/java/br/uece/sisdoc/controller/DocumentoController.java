@@ -55,9 +55,9 @@ public class DocumentoController {
 	}
 	
 	@GetMapping("to-user/{id}")
-	public Page<Documento> getToUser(Pageable pageable, @PathVariable Long id, Authentication authentication) {
+	public Page<Documento> getToUser(Pageable pageable, @PathVariable Long id, Authentication authentication, DocumentoDTO documentoDTO) {
 		
-		Page<Documento> pageReturn = documentoService.findAllToUser(pageable, id, authentication);
+		Page<Documento> pageReturn = documentoService.findAllToUser(pageable, id, authentication, documentoDTO);
 		
 		return pageReturn;
 	}
