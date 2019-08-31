@@ -1,7 +1,11 @@
 package br.uece.sisdoc.service;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
+import org.hibernate.transform.ResultTransformer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -9,6 +13,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import br.uece.sisdoc.dto.UsuarioDTO;
+import br.uece.sisdoc.dto.UsuarioForListDTO;
 import br.uece.sisdoc.model.Cargo;
 import br.uece.sisdoc.model.Setor;
 import br.uece.sisdoc.model.Usuario;
@@ -70,6 +75,18 @@ public class UsuarioService {
 	public Page<Usuario> findAll(Pageable pageable, UsuarioDTO usuarioDTO) {
 		
 		return usuarioRepository.findAll(pageable);
+	}
+	
+	public List<UsuarioForListDTO> findAllForList() {
+		
+		List<Object[]> list = usuarioRepository.allUsersForList();
+		
+		List<UsuarioForListDTO> listUsuarioForList = new ArrayList<UsuarioForListDTO>();
+		for(Object[] ob : list) {
+			listUsuarioForList.add(new UsuarioForListDTO((Long)ob[0], (String)ob[1]));
+		}
+		
+		return listUsuarioForList;
 	}
 	
 	public Usuario findByEmail(String email) {

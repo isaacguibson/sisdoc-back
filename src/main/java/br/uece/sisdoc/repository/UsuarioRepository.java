@@ -1,6 +1,9 @@
 package br.uece.sisdoc.repository;
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import br.uece.sisdoc.model.Usuario;
@@ -10,4 +13,6 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long>, JpaSpec
 
 	Usuario findByEmail(String email);
 	
+	@Query(value = "SELECT usuario.id, usuario.nome FROM Usuario usuario")
+	public List<Object[]> allUsersForList();
 }
