@@ -4,9 +4,13 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.StringReader;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
+
+import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -33,6 +37,7 @@ import br.uece.sisdoc.dto.DocumentoDTO;
 import br.uece.sisdoc.model.Documento;
 import br.uece.sisdoc.model.TipoDocumento;
 import br.uece.sisdoc.model.Usuario;
+import br.uece.sisdoc.model.UsuarioDocumento;
 import br.uece.sisdoc.repository.DocumentoRepository;
 import br.uece.sisdoc.repository.TipoDocumentoRepository;
 import br.uece.sisdoc.repository.UsuarioDocumentoRepository;
@@ -60,12 +65,82 @@ public class DocumentoService {
 	@Autowired
 	CustomUserDetailService customUserDetailService;
 	
-	
+	@Transactional
 	public Documento create(DocumentoDTO documentoDto) {
 		
-		Documento documento = dtoToDocumento(documentoDto);
+		try {
 		
-		return documentoRepository.save(documento);
+			Documento documento = dtoToDocumento(documentoDto);
+			
+			Documento documentoSaved = documentoRepository.save(documento);
+			
+			if(documentoSaved == null) {
+				//Nao foi possivel salvar o documento
+				return null;
+			}
+			
+			UsuarioDocumento usuarioDocumento = null;
+			
+			//Caso a lista de usuarios venha nula ou vazia enviar o documentos para todos
+			//Deve ser tratado no front
+			int documentosEnviados = 0;
+			if(documentoDto.getDestinatariosIds() == null || documentoDto.getDestinatariosIds().isEmpty()) {
+				
+				List<Usuario> usuarios = usuarioRepository.findAll();
+				
+				for(Usuario usuarioDestino : usuarios) {
+					
+					usuarioDocumento = new UsuarioDocumento();
+					
+					usuarioDocumento.setUsuarioDestino(usuarioDestino);
+					usuarioDocumento.setDocumento(documentoSaved);
+					usuarioDocumento.setAbertaPeloUsuario(false);
+					
+					UsuarioDocumento usuarioDocumentoSalvo =  usuarioDocumentoRepository.save(usuarioDocumento);
+					
+					if(usuarioDocumentoSalvo != null) {
+						documentosEnviados++;
+					}
+					
+				}
+				
+				
+			} else {
+				
+				for(Long destinatarioID : documentoDto.getDestinatariosIds()) {
+					usuarioDocumento = new UsuarioDocumento();
+					usuarioDocumento.setDocumento(documentoSaved);
+					
+					Optional<Usuario> usuarioDestinoOptional = usuarioRepository.findById(destinatarioID);
+					
+					if(usuarioDestinoOptional.isPresent()) {
+						usuarioDocumento.setUsuarioDestino(usuarioDestinoOptional.get());
+					} else {
+						continue;
+					}
+					
+					usuarioDocumento.setAbertaPeloUsuario(false);
+					
+					UsuarioDocumento usuarioDocumentoSalvo = usuarioDocumentoRepository.save(usuarioDocumento);
+					
+					if(usuarioDocumentoSalvo != null) {
+						documentosEnviados++;
+					}
+				}
+			}
+			
+			if(documentosEnviados == 0) {
+				documentoRepository.delete(documentoSaved);
+				
+				//Nao foi possivel enviar este documento para nenhum usuarios
+				return null;
+			}
+			
+			return documentoSaved;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
 		
 	}
 	

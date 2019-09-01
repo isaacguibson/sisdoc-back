@@ -1,6 +1,6 @@
 package br.uece.sisdoc.dto;
 
-import java.util.Date;
+import java.util.List;
 
 public class DocumentoDTO {
 
@@ -17,6 +17,8 @@ public class DocumentoDTO {
 	private String dataInicial;
 	
 	private String dataFinal;
+	
+	private List<Long> destinatariosIds;
 
 	public Long getId() {
 		return id;
@@ -72,6 +74,14 @@ public class DocumentoDTO {
 
 	public void setIdentificador(String identificador) {
 		this.identificador = identificador;
+	}
+
+	public List<Long> getDestinatariosIds() {
+		return destinatariosIds;
+	}
+
+	public void setDestinatariosIds(List<Long> destinatariosIds) {
+		this.destinatariosIds = destinatariosIds;
 	}
 	
 }
