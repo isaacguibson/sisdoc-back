@@ -16,7 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.data.jpa.domain.Specifications;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
@@ -34,12 +33,15 @@ import com.itextpdf.text.pdf.PdfWriter;
 import br.uece.sisdoc.configuration.CustomUserDetailService;
 import br.uece.sisdoc.configuration.CustomUserPrincipal;
 import br.uece.sisdoc.dto.DocumentoDTO;
+import br.uece.sisdoc.model.Cargo;
 import br.uece.sisdoc.model.Documento;
 import br.uece.sisdoc.model.TipoDocumento;
 import br.uece.sisdoc.model.Usuario;
 import br.uece.sisdoc.model.UsuarioDocumento;
+import br.uece.sisdoc.repository.CargoRepository;
 import br.uece.sisdoc.repository.DocumentoRepository;
 import br.uece.sisdoc.repository.TipoDocumentoRepository;
+import br.uece.sisdoc.repository.UsuarioCargoRepository;
 import br.uece.sisdoc.repository.UsuarioDocumentoRepository;
 import br.uece.sisdoc.repository.UsuarioRepository;
 import br.uece.sisdoc.specification.DocumentoSpecification;
@@ -54,6 +56,9 @@ public class DocumentoService {
 	DocumentoRepository documentoRepository;
 	
 	@Autowired
+	CargoRepository cargoRepository;
+	
+	@Autowired
 	UsuarioDocumentoRepository usuarioDocumentoRepository;
 	
 	@Autowired
@@ -61,6 +66,9 @@ public class DocumentoService {
 	
 	@Autowired
 	TipoDocumentoRepository tipoDocumentoRepository;
+	
+	@Autowired
+	UsuarioCargoRepository usuarioCargoRepository;
 
 	@Autowired
 	CustomUserDetailService customUserDetailService;
@@ -79,6 +87,8 @@ public class DocumentoService {
 				return null;
 			}
 			
+			
+			//TODO Criar metodo de envio separado
 			UsuarioDocumento usuarioDocumento = null;
 			
 			//Caso a lista de usuarios venha nula ou vazia enviar o documentos para todos
@@ -144,7 +154,15 @@ public class DocumentoService {
 		
 	}
 	
-	public String generateOficio(Long id) {
+	public String generateOficio(Long id, Long cargoId) {
+		
+		Optional<Cargo> optCargo = cargoRepository.findById(cargoId);
+		Cargo cargo = null;
+		if(optCargo.isPresent()) {
+			cargo = optCargo.get();
+		} else {
+			return null;
+		}
 		
 		try {
 			Documento documento = documentoRepository.getOne(id);
@@ -167,7 +185,7 @@ public class DocumentoService {
 			documento.setTotalPages(pageNumber);
 //			generateFooter(writer, document, documento);
 			
-			HeaderFooterPageEvent event = new HeaderFooterPageEvent(documento);
+			HeaderFooterPageEvent event = new HeaderFooterPageEvent(documento, cargo);
 			writer.setPageEvent(event);
 			
 //			Font font = FontFactory.getFont(FontFactory.COURIER, 16, BaseColor.BLACK);
@@ -189,10 +207,79 @@ public class DocumentoService {
 	public Documento update(DocumentoDTO documentoDto) {
 		
 		Documento documento = dtoToDocumento(documentoDto);
-		
 		documento.setId(documentoDto.getId());
 		
-		return documentoRepository.save(documento);
+		if(documento.getId() != null) {
+			Optional<Documento> optDocumentoToUpdate = documentoRepository.findById(documento.getId());
+			
+			if(!optDocumentoToUpdate.isPresent()) {
+				return null;
+			}
+			
+			documento = documentoRepository.save(documento);
+			
+			if(documento == null) {
+				return null;
+			}
+			
+			//Ids dos usuarios da lista de envio
+			List<Long> idsDestinatariosParaEnviar = documentoDto.getDestinatariosIds();
+			//Ids dos usuarios que ja estao no banco
+			List<Long> idsDestinatariosExistentes = usuarioDocumentoRepository.getDestinatariosDoDoc(documento.getId());
+			
+			//Usuarios que foram removidos da lista de envio
+			List<Long> idsParaExcluir = new ArrayList<Long>();
+			//Usuarios que fora adicionados na lista de envio
+			List<Long> idsParaIncluir = new ArrayList<Long>();
+			
+			int usuariosChecados = idsDestinatariosParaEnviar.size() - 1;
+			while(usuariosChecados >= 0) {
+				if(!idsDestinatariosExistentes.contains(idsDestinatariosParaEnviar.get(usuariosChecados))) {
+					idsParaIncluir.add(idsDestinatariosParaEnviar.get(usuariosChecados));
+				}
+				usuariosChecados--;
+			}
+			
+			usuariosChecados = idsDestinatariosExistentes.size() - 1;
+			while(usuariosChecados >= 0) {
+				if(!idsDestinatariosParaEnviar.contains(idsDestinatariosExistentes.get(usuariosChecados))) {
+					idsParaExcluir.add(idsDestinatariosExistentes.get(usuariosChecados));
+				}
+				usuariosChecados--;
+			}
+			
+			UsuarioDocumento usuarioDocumentoParaIncluir = null;
+			Usuario usuario = new Usuario();
+			Optional<Usuario> optUsuario = null;
+			for(Long idParaIncluir : idsParaIncluir) {
+				usuarioDocumentoParaIncluir = new UsuarioDocumento();
+				usuarioDocumentoParaIncluir.setDocumento(documento);
+				
+				optUsuario = usuarioRepository.findById(idParaIncluir);
+				
+				if(optUsuario.isPresent()) {
+					usuario = optUsuario.get();
+				} else {
+					continue;
+				}
+				
+				usuarioDocumentoParaIncluir.setUsuarioDestino(usuario);
+				usuarioDocumentoParaIncluir.setAbertaPeloUsuario(false);
+				usuarioDocumentoRepository.save(usuarioDocumentoParaIncluir);
+			}
+			
+			for(Long idParaExcluir : idsParaExcluir) {
+				List<UsuarioDocumento> usuarioDocumentos = usuarioDocumentoRepository.getUserDocByUserDestIdAndDocId(idParaExcluir, documento.getId());
+			
+				for(UsuarioDocumento usuDocParaExcluir : usuarioDocumentos) {
+					usuarioDocumentoRepository.deleteById(usuDocParaExcluir.getId());
+				}
+			}
+			
+			return documento;
+		}
+		
+		return null;
 	}
 	
 	
@@ -310,6 +397,34 @@ public class DocumentoService {
 		} else {
 			return null;
 		}
+	}
+	
+	public DocumentoDTO findFullDocById(Long id) {
+		
+		Optional<Documento> optionalDocumento = documentoRepository.findById(id);
+		
+		if(optionalDocumento.isPresent()) {
+			
+			return documentoToDTO(optionalDocumento.get());
+			
+		} else {
+			return null;
+		}
+	}
+	
+	private DocumentoDTO documentoToDTO(Documento documento) {
+		DocumentoDTO documentoDTO = new DocumentoDTO();
+		
+		documentoDTO.setUsuarioId(documento.getUsuario().getId());
+		documentoDTO.setConteudo(documento.getConteudo());
+		documentoDTO.setId(documento.getId());
+		documentoDTO.setTipoDocumentoId(documento.getTipoDocumento().getId());
+		
+		List<Long> destinatariosIds = new ArrayList<Long>();
+		destinatariosIds = usuarioDocumentoRepository.getDestinatariosDoDoc(documento.getId());
+		documentoDTO.setDestinatariosIds(destinatariosIds);
+		
+		return documentoDTO;
 	}
 	
 	private Documento dtoToDocumento(DocumentoDTO documentoDTO) {
@@ -444,8 +559,8 @@ public class DocumentoService {
 //			footer.setAlignment(Element.ALIGN_CENTER);
 //			document.add(footer);
 			
-			HeaderFooterPageEvent event = new HeaderFooterPageEvent(documento);
-			writer.setPageEvent(event);
+//			HeaderFooterPageEvent event = new HeaderFooterPageEvent(documento);
+//			writer.setPageEvent(event);
 			
 		} catch(Exception e) {
 			e.printStackTrace();

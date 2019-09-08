@@ -4,6 +4,8 @@ import java.io.File;
 import java.nio.file.Files;
 import java.util.List;
 
+import javax.websocket.server.PathParam;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.uece.sisdoc.dto.DocumentoDTO;
@@ -63,17 +66,21 @@ public class DocumentoController {
 	}
 	
 	@GetMapping("/{id}")
-	public Documento findById(@PathVariable Long id) {
+	public DocumentoDTO findById(@PathVariable Long id) {
 		
-		return documentoService.findById(id);
+		return documentoService.findFullDocById(id);
 	}
 	
 	
 	@GetMapping("/oficio/{id}")
-	public ResponseEntity<byte[]> createDocumentFile(@PathVariable Long id) {
+	public ResponseEntity<byte[]> createDocumentFile(@PathVariable Long id, @RequestParam Long cargoId) {
+		
+		if(cargoId == null) {
+			return null;
+		}
 		
 		try {
-			String path = documentoService.generateOficio(id);
+			String path = documentoService.generateOficio(id, cargoId);
 			
 			File file = new File(path);
 			

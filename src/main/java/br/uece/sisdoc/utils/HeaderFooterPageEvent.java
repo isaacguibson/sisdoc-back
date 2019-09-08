@@ -9,15 +9,18 @@ import com.itextpdf.text.pdf.PdfContentByte;
 import com.itextpdf.text.pdf.PdfPageEventHelper;
 import com.itextpdf.text.pdf.PdfWriter;
 
+import br.uece.sisdoc.model.Cargo;
 import br.uece.sisdoc.model.Documento;
 
 public class HeaderFooterPageEvent extends PdfPageEventHelper{
 
 	private Documento documento;
+	private Cargo cargo;
 	
-	public HeaderFooterPageEvent(Documento documento) {
+	public HeaderFooterPageEvent(Documento documento, Cargo cargo) {
 		super();
 		this.documento = documento;
+		this.cargo = cargo;
 	}
 
 	//	Exemplo Cabeçalho
@@ -34,14 +37,14 @@ public class HeaderFooterPageEvent extends PdfPageEventHelper{
     	if(document.getPageNumber() == getDocumento().getTotalPages()) {
     		
     		Paragraph name = new Paragraph(documento.getUsuario().getTratamento()+" "+documento.getUsuario().getNome());
-//    		Paragraph department = new Paragraph(documento.getUsuario().getCargo().getNome() + " do " + documento.getUsuario().getSetor().getNome() + " da UECE.");
+    		Paragraph department = new Paragraph(cargo.getNome() + " do " + cargo.getSetor().getNome() + " da UECE.");
     		
     		Paragraph endereco = new Paragraph("Av. Silas Munguba, 1700 – Campus do Itaperi – Fortaleza/CE – CEP: 60740-903");
     		Paragraph phones = new Paragraph("Fone (85) 3101.96.01 – Fax (85) 3101.96.03");
     		Paragraph webContact = new Paragraph("Site: www.uece.br – e-mail: "+getDocumento().getUsuario().getEmail());
     		
     		ColumnText.showTextAligned(writer.getDirectContent(), Element.ALIGN_CENTER, name, 300, 115, 0);
-//    		ColumnText.showTextAligned(writer.getDirectContent(), Element.ALIGN_CENTER, department, 300, 100, 0);
+    		ColumnText.showTextAligned(writer.getDirectContent(), Element.ALIGN_CENTER, department, 300, 100, 0);
     		
     		PdfContentByte canvas = writer.getDirectContent();
     		CMYKColor blackColor = new CMYKColor(1.f, 1.f, 1.f, 0.f);
@@ -65,6 +68,14 @@ public class HeaderFooterPageEvent extends PdfPageEventHelper{
 
 	public void setDocumento(Documento documento) {
 		this.documento = documento;
+	}
+
+	public Cargo getCargo() {
+		return cargo;
+	}
+
+	public void setCargo(Cargo cargo) {
+		this.cargo = cargo;
 	}
 	
 }
