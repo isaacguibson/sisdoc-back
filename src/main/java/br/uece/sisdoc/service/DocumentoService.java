@@ -162,7 +162,7 @@ public class DocumentoService {
 			
 			document.open();
 			
-			generateHeader(writer, document, documento.getUsuario().getSetor().getNome());
+//			generateHeader(writer, document, documento.getUsuario().getSetor().getNome());
 			int pageNumber = generateOficioBody(writer, document, documento);
 			documento.setTotalPages(pageNumber);
 //			generateFooter(writer, document, documento);

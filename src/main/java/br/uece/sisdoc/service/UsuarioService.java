@@ -19,6 +19,7 @@ import br.uece.sisdoc.model.Setor;
 import br.uece.sisdoc.model.Usuario;
 import br.uece.sisdoc.repository.CargoRepository;
 import br.uece.sisdoc.repository.SetorRepository;
+import br.uece.sisdoc.repository.UsuarioCargoRepository;
 import br.uece.sisdoc.repository.UsuarioRepository;
 
 @Service
@@ -32,6 +33,9 @@ public class UsuarioService {
 	
 	@Autowired
 	CargoRepository cargoRepository;
+	
+	@Autowired
+	UsuarioCargoRepository usuarioCargoRepository;
 	
 	@Autowired
 	private PasswordEncoder passwordEncoder;
@@ -93,17 +97,21 @@ public class UsuarioService {
 		return usuarioRepository.findByEmail(email);
 	}
 	
+	public List<Cargo> findCargoByUser(Long usuarioId) {
+		return usuarioCargoRepository.getUserCargos(usuarioId);
+	}
+	
 	private Usuario dtoToUsuario(UsuarioDTO usuarioDTO) {
 		Usuario usuario = new Usuario();
 		
 		Optional<Setor> optionalSetor = setorRepository.findById(usuarioDTO.getSetorId());
 		if(optionalSetor.isPresent()) {
-			usuario.setSetor(optionalSetor.get());
+//			usuario.setSetor(optionalSetor.get());
 		}
 		
 		Optional<Cargo> optionalCargo = cargoRepository.findById(usuarioDTO.getCargoId());
 		if(optionalCargo.isPresent()) {
-			usuario.setCargo(optionalCargo.get());
+//			usuario.setCargo(optionalCargo.get());
 		}
 		
 		usuario.setNome(usuarioDTO.getNome());

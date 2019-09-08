@@ -30,13 +30,13 @@ public class Usuario {
 	@Column(name = "senha", nullable = false)
 	private String senha;
 	
-	@ManyToOne(fetch = FetchType.EAGER)
-	@JoinColumn(name = "setor_id", referencedColumnName = "id_setor")
-	private Setor setor;
-	
-	@ManyToOne(fetch = FetchType.EAGER)
-	@JoinColumn(name = "cargo_id", referencedColumnName = "id_cargo")
-	private Cargo cargo;
+//	@ManyToOne(fetch = FetchType.EAGER)
+//	@JoinColumn(name = "setor_id", referencedColumnName = "id_setor")
+//	private Setor setor;
+//	
+//	@ManyToOne(fetch = FetchType.EAGER)
+//	@JoinColumn(name = "cargo_id", referencedColumnName = "id_cargo")
+//	private Cargo cargo;
 	
 	@Column(name = "tratamento", nullable = false)
 	private String tratamento;
@@ -75,21 +75,21 @@ public class Usuario {
 		this.senha = senha;
 	}
 
-	public Setor getSetor() {
-		return setor;
-	}
-
-	public void setSetor(Setor setor) {
-		this.setor = setor;
-	}
-
-	public Cargo getCargo() {
-		return cargo;
-	}
-
-	public void setCargo(Cargo cargo) {
-		this.cargo = cargo;
-	}
+//	public Setor getSetor() {
+//		return setor;
+//	}
+//
+//	public void setSetor(Setor setor) {
+//		this.setor = setor;
+//	}
+//
+//	public Cargo getCargo() {
+//		return cargo;
+//	}
+//
+//	public void setCargo(Cargo cargo) {
+//		this.cargo = cargo;
+//	}
 
 	public String getTratamento() {
 		return tratamento;

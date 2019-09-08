@@ -1,6 +1,7 @@
 package br.uece.sisdoc.configuration;
 
 import java.io.IOException;
+import java.util.List;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -9,29 +10,43 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.web.config.EnableSpringDataWebSupport;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import br.uece.sisdoc.model.Cargo;
 import br.uece.sisdoc.model.Usuario;
+import br.uece.sisdoc.repository.UsuarioCargoRepository;
+import br.uece.sisdoc.service.UsuarioService;
 
 //filtra requisições de login
 public class JWTLoginFilter extends AbstractAuthenticationProcessingFilter {
 
     private TokenAuthenticationService tokenAuthenticationService;
+    
+    UsuarioCargoRepository usuarioCargoRepository;
+    
+    @Autowired
+    UsuarioService usuarioService;
 
-    public JWTLoginFilter(String url, AuthenticationManager authenticationManager) {
+    public JWTLoginFilter(String url, AuthenticationManager authenticationManager, UsuarioCargoRepository jpaRepository) {
 
          super(new AntPathRequestMatcher(url));
 
          setAuthenticationManager(authenticationManager);
 
          tokenAuthenticationService = new TokenAuthenticationService();
+         
+         this.usuarioCargoRepository = (UsuarioCargoRepository)jpaRepository;
 
     }
     
@@ -88,8 +103,28 @@ public class JWTLoginFilter extends AbstractAuthenticationProcessingFilter {
         jsonUsuario.put("email", usuario.getEmail());
         jsonUsuario.put("nome", usuario.getNome());
         jsonUsuario.put("tratamento", usuario.getTratamento());
-        jsonUsuario.put("cargo", usuario.getCargo().getNome());
-        jsonUsuario.put("setor", usuario.getSetor().getNome());
+        
+        List<Cargo> cargos = usuarioCargoRepository.getUserCargos(usuario.getId());
+        JSONArray jsonArrayCargos = new JSONArray();
+        
+        JSONObject cargoJson = null;
+        JSONObject setorJson = null;
+        for(Cargo cargo : cargos) {
+        	cargoJson = new JSONObject();
+        	setorJson = new JSONObject();
+        	
+        	cargoJson.put("cargoId", cargo.getId());
+        	cargoJson.put("cargoNome", cargo.getNome());
+        	
+        	setorJson.put("setorId", cargo.getSetor().getId());
+        	setorJson.put("setorNome", cargo.getSetor().getNome());
+        	
+        	cargoJson.put("setor", setorJson);
+        	jsonArrayCargos.put(cargoJson);
+        }
+        
+        jsonUsuario.put("cargos", jsonArrayCargos);
+        
         jsonUsuario.put("id", usuario.getId());
         
         return jsonUsuario;

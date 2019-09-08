@@ -50,6 +50,9 @@ public class Documento {
 	@DateTimeFormat(pattern = "dd/MM/yyyy HH:mm:ss")
 	private Date dataCriacao;
 	
+	@Column(name = "enviada", columnDefinition = "BOOLEAN default '0'", nullable = false)
+	private Boolean enviada;
+	
 	@Transient
 	private int totalPages;
 	
