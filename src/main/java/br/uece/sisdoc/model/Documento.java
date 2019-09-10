@@ -120,4 +120,14 @@ public class Documento {
 	public void setTotalPages(int totalPages) {
 		this.totalPages = totalPages;
 	}
+
+	public Boolean getEnviada() {
+		return enviada;
+	}
+
+	public void setEnviada(Boolean enviada) {
+		this.enviada = enviada;
+	}
+	
+	
 }

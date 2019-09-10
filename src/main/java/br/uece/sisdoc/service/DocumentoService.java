@@ -79,6 +79,7 @@ public class DocumentoService {
 		try {
 		
 			Documento documento = dtoToDocumento(documentoDto);
+			documento.setEnviada(false);
 			
 			Documento documentoSaved = documentoRepository.save(documento);
 			
@@ -212,11 +213,15 @@ public class DocumentoService {
 		if(documento.getId() != null) {
 			Optional<Documento> optDocumentoToUpdate = documentoRepository.findById(documento.getId());
 			
+			Documento documentoToUpdate = null;
 			if(!optDocumentoToUpdate.isPresent()) {
 				return null;
+			} else {
+				documentoToUpdate = optDocumentoToUpdate.get();
 			}
 			
-			documento = documentoRepository.save(documento);
+			documentoToUpdate.setConteudo(documento.getConteudo());
+			documento = documentoRepository.save(documentoToUpdate);
 			
 			if(documento == null) {
 				return null;
