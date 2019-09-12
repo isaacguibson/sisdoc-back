@@ -19,6 +19,12 @@ public class DocumentoDTO {
 	private String dataFinal;
 	
 	private List<Long> destinatariosIds;
+	
+	private List<Long> setoresDestinatariosIds;
+	
+	private Boolean mensagemGeral;
+	
+	private Boolean mensagemSetor;
 
 	public Long getId() {
 		return id;
@@ -82,6 +88,30 @@ public class DocumentoDTO {
 
 	public void setDestinatariosIds(List<Long> destinatariosIds) {
 		this.destinatariosIds = destinatariosIds;
+	}
+
+	public Boolean getMensagemGeral() {
+		return mensagemGeral;
+	}
+
+	public void setMensagemGeral(Boolean mensagemGeral) {
+		this.mensagemGeral = mensagemGeral;
+	}
+
+	public Boolean getMensagemSetor() {
+		return mensagemSetor;
+	}
+
+	public void setMensagemSetor(Boolean mensagemSetor) {
+		this.mensagemSetor = mensagemSetor;
+	}
+
+	public List<Long> getSetoresDestinatariosIds() {
+		return setoresDestinatariosIds;
+	}
+
+	public void setSetoresDestinatariosIds(List<Long> setoresDestinatariosIds) {
+		this.setoresDestinatariosIds = setoresDestinatariosIds;
 	}
 	
 }

@@ -53,6 +53,14 @@ public class Documento {
 	@Column(name = "enviada", columnDefinition = "BOOLEAN default '0'", nullable = false)
 	private Boolean enviada;
 	
+	//Indica que é pra ser enviada para todos os usuarios
+	@Column(name = "mensagem_geral", columnDefinition = "BOOLEAN default '0'", nullable = true)
+	private Boolean mensagemGeral;
+	
+	//Indica se mensagem é para determinado(s) setores
+	@Column(name = "mensagem_setor", nullable = true)
+	private Boolean mensagemSetor;
+	
 	@Transient
 	private int totalPages;
 	
@@ -128,6 +136,20 @@ public class Documento {
 	public void setEnviada(Boolean enviada) {
 		this.enviada = enviada;
 	}
-	
-	
+
+	public Boolean getMensagemGeral() {
+		return mensagemGeral;
+	}
+
+	public void setMensagemGeral(Boolean mensagemGeral) {
+		this.mensagemGeral = mensagemGeral;
+	}
+
+	public Boolean getMensagemSetor() {
+		return mensagemSetor;
+	}
+
+	public void setMensagemSetor(Boolean mensagemSetor) {
+		this.mensagemSetor = mensagemSetor;
+	}
 }

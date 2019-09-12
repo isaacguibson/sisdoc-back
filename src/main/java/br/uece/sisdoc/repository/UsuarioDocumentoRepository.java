@@ -29,4 +29,7 @@ public interface UsuarioDocumentoRepository extends JpaRepository<UsuarioDocumen
 	@Query(value = "SELECT usuarioDocumento.documento FROM UsuarioDocumento usuarioDocumento WHERE usuarioDocumento.usuarioDestino.id = :usuarioId AND usuarioDocumento.abertaPeloUsuario = 0")
 	public Page<Documento> getDocumentosNaoLidos(@Param("usuarioId") Long usuarioId, Pageable pageable);
 	
+	@Query(value = "DELETE FROM UsuarioDocumento usuarioDocumento WHERE usuarioDocumento.documento.id = :documentoId")
+	public void deleteDocumentosEnviadosByDoc(@Param("documentoId") Long documentoId);
+	
 }
