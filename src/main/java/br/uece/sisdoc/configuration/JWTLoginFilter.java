@@ -54,7 +54,7 @@ public class JWTLoginFilter extends AbstractAuthenticationProcessingFilter {
     	
     	if(httpServletRequest.getMethod().equals("OPTIONS")) {
     		
-    		httpServletResponse.setHeader("Access-Control-Allow-Headers", "*");
+    		httpServletResponse.setHeader("Access-Control-Allow-Headers", "content-type");
     		httpServletResponse.setHeader("Access-Control-Allow-Methods", "POST, GET, PUT, OPTIONS, DELETE");
     		httpServletResponse.setHeader("Access-Control-Max-Age", "3600");
     		httpServletResponse.setStatus(200);

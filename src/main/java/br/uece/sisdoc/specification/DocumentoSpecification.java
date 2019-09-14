@@ -52,6 +52,13 @@ public class DocumentoSpecification {
 		
 	}
 	
+	public Specification<Documento> filterSendeds(){
+		
+		return (root, criteriaQuery, criteriaBuilder) ->
+					criteriaBuilder.equal(root.get("enviada"), true);
+		
+	}
+	
 	public Specification<Documento> filterByIdentificador(String identificador){
 		
 		return (identificador == null || identificador.equals("")) ? null : (root, criteriaQuery, criteriaBuilder) ->

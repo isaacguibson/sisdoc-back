@@ -1,5 +1,6 @@
 package br.uece.sisdoc.service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -57,6 +58,15 @@ public class SetorService {
 				setorSpecification.filterByName(setor.getNome())
 		).and(setorSpecification.filterById(setor.getId())), 
 				pageable);
+	}
+	
+	public List<Setor> setorForList(){
+		List<Setor> setores = new ArrayList<Setor>();
+		
+		setores = setorRepository.findAll();
+		
+		return setores;
+		
 	}
 	
 	public List<Setor> findAll() {

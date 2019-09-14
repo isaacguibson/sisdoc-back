@@ -12,6 +12,7 @@ import org.springframework.stereotype.Repository;
 
 import br.uece.sisdoc.model.UsuarioDocumento;
 import br.uece.sisdoc.model.Documento;
+import br.uece.sisdoc.model.Setor;
 
 @Repository
 public interface UsuarioDocumentoRepository extends JpaRepository<UsuarioDocumento, Long> , JpaSpecificationExecutor<UsuarioDocumento>{
@@ -22,6 +23,9 @@ public interface UsuarioDocumentoRepository extends JpaRepository<UsuarioDocumen
 	
 	@Query(value = "SELECT usuarioDocumento.usuarioDestino.id FROM UsuarioDocumento usuarioDocumento WHERE usuarioDocumento.documento.id = :documentoId")
 	public List<Long> getDestinatariosDoDoc(@Param("documentoId") Long documentoId);
+	
+	@Query(value = "SELECT usuarioCargo.cargo.setor FROM UsuarioDocumento usuarioDocumento, UsuarioCargo usuarioCargo WHERE usuarioDocumento.documento.id = :documentoId AND usuarioCargo.usuario.id = usuarioDocumento.usuarioDestino.id")
+	public List<Setor> getSetoresDoDoc(@Param("documentoId") Long documentoId);
 	
 	@Query(value = "SELECT usuarioDocumento FROM UsuarioDocumento usuarioDocumento WHERE usuarioDocumento.usuarioDestino.id = :usuarioId AND usuarioDocumento.documento.id = :documentoId")
 	public List<UsuarioDocumento> getUserDocByUserDestIdAndDocId(@Param("usuarioId") Long usuarioId, @Param("documentoId") Long documentoId);

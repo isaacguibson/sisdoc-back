@@ -35,6 +35,7 @@ import br.uece.sisdoc.configuration.CustomUserPrincipal;
 import br.uece.sisdoc.dto.DocumentoDTO;
 import br.uece.sisdoc.model.Cargo;
 import br.uece.sisdoc.model.Documento;
+import br.uece.sisdoc.model.Setor;
 import br.uece.sisdoc.model.TipoDocumento;
 import br.uece.sisdoc.model.Usuario;
 import br.uece.sisdoc.model.UsuarioDocumento;
@@ -95,13 +96,21 @@ public class DocumentoService {
 			//Caso a lista de usuarios venha nula ou vazia enviar o documentos para todos
 			//Deve ser tratado no front
 			int documentosEnviados = 0;
-			if(documentoDto.getDestinatariosIds() == null || documentoDto.getDestinatariosIds().isEmpty()) {
+			if(documentoDto.getDestinatariosIds() == null || documentoDto.getDestinatariosIds().isEmpty() || documento.getMensagemGeral()) {
 				
-				documentosEnviados = enviarMensagemParaTodos(documentoSaved);
+				if(documentoDto.getMensagemSetor()) {
+					documentosEnviados = enviarMensagemParaTodosSetores(documentoSaved);
+				} else {
+					documentosEnviados = enviarMensagemParaTodos(documentoSaved);
+				}
 				
 			} else {
 				
-				documentosEnviados = enviarMensagemParaListaUsuarios(documentoSaved, documentoDto.getDestinatariosIds());
+				if(documentoDto.getMensagemSetor()) {
+					documentosEnviados = enviarMensagemParaListaSetores(documentoSaved, documentoDto.getDestinatariosIds());
+				} else {
+					documentosEnviados = enviarMensagemParaListaUsuarios(documentoSaved, documentoDto.getDestinatariosIds());
+				}
 				
 			}
 			
@@ -146,7 +155,7 @@ public class DocumentoService {
 			
 			document.open();
 			
-//			generateHeader(writer, document, documento.getUsuario().getSetor().getNome());
+			generateHeader(writer, document, cargo.getSetor().getNome());
 			int pageNumber = generateOficioBody(writer, document, documento);
 			documento.setTotalPages(pageNumber);
 //			generateFooter(writer, document, documento);
@@ -203,38 +212,66 @@ public class DocumentoService {
 			if(idsDestinatariosParaEnviar == null || idsDestinatariosParaEnviar.isEmpty() || documento.getMensagemGeral()) {
 				
 				excluirTodosOsEnvios(documento);
-				enviarMensagemParaTodos(documento);
 				
-			} else if (documento.getMensagemSetor()) {
+				if(documentoDto.getMensagemSetor()) {
+					enviarMensagemParaTodosSetores(documento);
+				} else {
+					enviarMensagemParaTodos(documento);
+				}
 				
-				//TODO implementar envio para setor
+				
+				
+			} else if (documentoDto.getMensagemSetor()) {
+				
+				//Recebe uma lista de id de setores
+				List<Long> idsSetoresParaEnviar = documentoDto.getDestinatariosIds();
+				List<Long> idsParaIncluir = new ArrayList<Long>();
+				List<Usuario> usuariosDoSetor = new ArrayList<Usuario>();
+				
+				if(idsSetoresParaEnviar != null && !idsSetoresParaEnviar.isEmpty()) {
+					for(Long idSetor : idsSetoresParaEnviar) {
+						usuariosDoSetor = usuarioRepository.getPrincipalUsersFromSetor(idSetor);
+						
+						if(usuariosDoSetor != null && !usuariosDoSetor.isEmpty()) {
+							for(Usuario usuarioDoSetor : usuariosDoSetor) {
+								idsParaIncluir.add(usuarioDoSetor.getId());
+							}
+						}
+					}
+				}
+				
+				excluirTodosOsEnvios(documento);
+				enviarMensagemParaListaUsuarios(documento, idsParaIncluir);
 				
 			} else {
 				
-				//Usuarios que foram removidos da lista de envio
-				List<Long> idsParaExcluir = new ArrayList<Long>();
-				//Usuarios que fora adicionados na lista de envio
-				List<Long> idsParaIncluir = new ArrayList<Long>();
+//				//Usuarios que foram removidos da lista de envio
+//				List<Long> idsParaExcluir = new ArrayList<Long>();
+//				//Usuarios que fora adicionados na lista de envio
+//				List<Long> idsParaIncluir = new ArrayList<Long>();
+//				
+//				int usuariosChecados = idsDestinatariosParaEnviar.size() - 1;
+//				while(usuariosChecados >= 0) {
+//					if(!idsDestinatariosExistentes.contains(idsDestinatariosParaEnviar.get(usuariosChecados))) {
+//						idsParaIncluir.add(idsDestinatariosParaEnviar.get(usuariosChecados));
+//					}
+//					usuariosChecados--;
+//				}
+//				
+//				usuariosChecados = idsDestinatariosExistentes.size() - 1;
+//				while(usuariosChecados >= 0) {
+//					if(!idsDestinatariosParaEnviar.contains(idsDestinatariosExistentes.get(usuariosChecados))) {
+//						idsParaExcluir.add(idsDestinatariosExistentes.get(usuariosChecados));
+//					}
+//					usuariosChecados--;
+//				}
+//				
+//				enviarMensagemParaListaUsuarios(documento, idsParaIncluir);
+//				
+//				excluirEnviosByUserIds(documento, idsParaExcluir);
 				
-				int usuariosChecados = idsDestinatariosParaEnviar.size() - 1;
-				while(usuariosChecados >= 0) {
-					if(!idsDestinatariosExistentes.contains(idsDestinatariosParaEnviar.get(usuariosChecados))) {
-						idsParaIncluir.add(idsDestinatariosParaEnviar.get(usuariosChecados));
-					}
-					usuariosChecados--;
-				}
-				
-				usuariosChecados = idsDestinatariosExistentes.size() - 1;
-				while(usuariosChecados >= 0) {
-					if(!idsDestinatariosParaEnviar.contains(idsDestinatariosExistentes.get(usuariosChecados))) {
-						idsParaExcluir.add(idsDestinatariosExistentes.get(usuariosChecados));
-					}
-					usuariosChecados--;
-				}
-				
-				enviarMensagemParaListaUsuarios(documento, idsParaIncluir);
-				
-				excluirEnviosByUserIds(documento, idsParaExcluir);
+				excluirTodosOsEnvios(documento);
+				enviarMensagemParaListaUsuarios(documento, idsDestinatariosParaEnviar);
 				
 			}
 			
@@ -266,6 +303,72 @@ public class DocumentoService {
 				usuarioDocumentoRepository.deleteById(usuDocParaExcluir.getId());
 			}
 		}
+		
+	}
+	
+	private int enviarMensagemParaListaSetores(Documento documento, List<Long> setoresIds) {
+		//Caso a lista de usuarios venha nula ou vazia enviar o documentos para todos
+		//Deve ser tratado no front
+		int documentosEnviados = 0;
+		
+		UsuarioDocumento usuarioDocumento = null;
+		List<Usuario> usuarios = new ArrayList<Usuario>();
+		if(setoresIds != null && !setoresIds.isEmpty()) {
+			for(Long setorId : setoresIds) {
+				
+				usuarios = usuarioRepository.getPrincipalUsersFromSetor(setorId);
+				
+				if(usuarios != null && !usuarios.isEmpty()) {
+					for(Usuario usuarioDestino : usuarios) {
+						
+						usuarioDocumento = new UsuarioDocumento();
+						
+						usuarioDocumento.setDocumento(documento);
+						usuarioDocumento.setUsuarioDestino(usuarioDestino);
+						
+						usuarioDocumento.setAbertaPeloUsuario(false);
+						
+						UsuarioDocumento usuarioDocumentoSalvo = usuarioDocumentoRepository.save(usuarioDocumento);
+						
+						if(usuarioDocumentoSalvo != null) {
+							documentosEnviados++;
+						}
+						
+					}
+				}
+				
+			}
+		}
+		
+		
+		return documentosEnviados;
+	}
+	
+	private int enviarMensagemParaTodosSetores(Documento documento) {
+		
+		List<Usuario> usuarios = usuarioRepository.allPrincipalUsers();
+		UsuarioDocumento usuarioDocumento = null;
+		int documentosEnviados = 0;
+		
+		if(usuarios != null && !usuarios.isEmpty()) {
+			for(Usuario usuarioDestino : usuarios) {
+				
+				usuarioDocumento = new UsuarioDocumento();
+				
+				usuarioDocumento.setUsuarioDestino(usuarioDestino);
+				usuarioDocumento.setDocumento(documento);
+				usuarioDocumento.setAbertaPeloUsuario(false);
+				
+				UsuarioDocumento usuarioDocumentoSalvo =  usuarioDocumentoRepository.save(usuarioDocumento);
+				
+				if(usuarioDocumentoSalvo != null) {
+					documentosEnviados++;
+				}
+				
+			}
+		}
+		
+		return documentosEnviados;
 		
 	}
 	
@@ -416,6 +519,7 @@ public class DocumentoService {
 					docSpecification.filterToUserId(id)
 				).and(docSpecification.filterByTipo(documento.getTipoDocumentoId()))
 				.and(docSpecification.filterByDate(dataInicial, dataFinal))
+				.and(docSpecification.filterSendeds())
 				.and(docSpecification.filterByIdentificador(documento.getIdentificador()))
 				,pageable);
 			
@@ -466,7 +570,14 @@ public class DocumentoService {
 		
 		if(!documento.getMensagemGeral()) {
 			if(documento.getMensagemSetor()) {
-				//TODO implementar busca de setores pelos usuarios
+				List<Setor> setoresDestinatarios = usuarioDocumentoRepository.getSetoresDoDoc(documento.getId());
+				
+				if(setoresDestinatarios != null && !setoresDestinatarios.isEmpty()) {
+					for(Setor setorDestino : setoresDestinatarios) {
+						destinatariosIds.add(setorDestino.getId());
+					}
+				}
+				
 			} else {
 				destinatariosIds = usuarioDocumentoRepository.getDestinatariosDoDoc(documento.getId());
 			}

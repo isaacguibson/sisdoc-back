@@ -27,6 +27,9 @@ public class Cargo {
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "setor_id", referencedColumnName = "id_setor")
 	private Setor setor;
+	
+	@Column(name = "cargo_principal", columnDefinition = "BOOLEAN default '0'", nullable = true)
+	private Boolean isCargoPrincipal;
 
 	
 	//Getters e Setters
@@ -53,6 +56,13 @@ public class Cargo {
 	public void setSetor(Setor setor) {
 		this.setor = setor;
 	}
-	
+
+	public Boolean getIsCargoPrincipal() {
+		return isCargoPrincipal;
+	}
+
+	public void setIsCargoPrincipal(Boolean isCargoPrincipal) {
+		this.isCargoPrincipal = isCargoPrincipal;
+	}
 	
 }
