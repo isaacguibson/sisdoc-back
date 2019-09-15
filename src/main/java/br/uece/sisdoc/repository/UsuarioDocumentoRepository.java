@@ -25,10 +25,16 @@ public interface UsuarioDocumentoRepository extends JpaRepository<UsuarioDocumen
 	public List<Long> getDestinatariosDoDoc(@Param("documentoId") Long documentoId);
 	
 	@Query(value = "SELECT usuarioCargo.cargo.setor FROM UsuarioDocumento usuarioDocumento, UsuarioCargo usuarioCargo WHERE usuarioDocumento.documento.id = :documentoId AND usuarioCargo.usuario.id = usuarioDocumento.usuarioDestino.id")
+	public List<Setor> getSetoresDoDocByUserCargo(@Param("documentoId") Long documentoId);
+	
+	@Query(value = "SELECT usuarioDocumento.setor FROM UsuarioDocumento usuarioDocumento WHERE usuarioDocumento.documento.id = :documentoId")
 	public List<Setor> getSetoresDoDoc(@Param("documentoId") Long documentoId);
 	
 	@Query(value = "SELECT usuarioDocumento FROM UsuarioDocumento usuarioDocumento WHERE usuarioDocumento.usuarioDestino.id = :usuarioId AND usuarioDocumento.documento.id = :documentoId")
 	public List<UsuarioDocumento> getUserDocByUserDestIdAndDocId(@Param("usuarioId") Long usuarioId, @Param("documentoId") Long documentoId);
+	
+	@Query(value = "SELECT usuarioDocumento FROM UsuarioDocumento usuarioDocumento WHERE usuarioDocumento.documento.id = :documentoId")
+	public List<UsuarioDocumento> getUserDocByDocId(@Param("documentoId") Long documentoId);
 	
 	@Query(value = "SELECT usuarioDocumento.documento FROM UsuarioDocumento usuarioDocumento WHERE usuarioDocumento.usuarioDestino.id = :usuarioId AND usuarioDocumento.abertaPeloUsuario = 0")
 	public Page<Documento> getDocumentosNaoLidos(@Param("usuarioId") Long usuarioId, Pageable pageable);

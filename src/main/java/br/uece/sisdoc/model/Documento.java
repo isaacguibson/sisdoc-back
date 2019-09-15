@@ -42,6 +42,9 @@ public class Documento {
 	@Column(name = "identificador", nullable = false)
 	private String identificador;
 	
+	@Column(name = "assunto", nullable = true, columnDefinition = "VARCHAR(255)")
+	private String assunto;
+	
 	@Column(name = "conteudo", nullable = false, columnDefinition = "TEXT")
 	private String conteudo;
 	
@@ -152,4 +155,13 @@ public class Documento {
 	public void setMensagemSetor(Boolean mensagemSetor) {
 		this.mensagemSetor = mensagemSetor;
 	}
+
+	public String getAssunto() {
+		return assunto;
+	}
+
+	public void setAssunto(String assunto) {
+		this.assunto = assunto;
+	}
+	
 }

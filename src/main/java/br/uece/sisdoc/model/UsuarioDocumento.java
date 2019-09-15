@@ -32,6 +32,10 @@ public class UsuarioDocumento {
 	/*Indica se o usuario destino ja baixou o documento*/
 	@Column(name = "aberta_pelo_usuario", nullable = false)
 	private Boolean abertaPeloUsuario;
+	
+	@ManyToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "setor_id", referencedColumnName = "id_setor", nullable = true)
+	private Setor setor;
 
 	public Long getId() {
 		return id;
@@ -63,6 +67,14 @@ public class UsuarioDocumento {
 
 	public void setAbertaPeloUsuario(Boolean abertaPeloUsuario) {
 		this.abertaPeloUsuario = abertaPeloUsuario;
+	}
+
+	public Setor getSetor() {
+		return setor;
+	}
+
+	public void setSetor(Setor setor) {
+		this.setor = setor;
 	}
 
 }

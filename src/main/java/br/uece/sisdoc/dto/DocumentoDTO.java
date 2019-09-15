@@ -12,6 +12,8 @@ public class DocumentoDTO {
 	
 	private Long tipoDocumentoId;
 	
+	private String assunto;
+	
 	private String conteudo;
 	
 	private String dataInicial;
@@ -112,6 +114,14 @@ public class DocumentoDTO {
 
 	public void setSetoresDestinatariosIds(List<Long> setoresDestinatariosIds) {
 		this.setoresDestinatariosIds = setoresDestinatariosIds;
+	}
+
+	public String getAssunto() {
+		return assunto;
+	}
+
+	public void setAssunto(String assunto) {
+		this.assunto = assunto;
 	}
 	
 }
