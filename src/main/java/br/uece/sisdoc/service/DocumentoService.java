@@ -52,7 +52,7 @@ import br.uece.sisdoc.utils.HeaderFooterPageEvent;
 @Service
 public class DocumentoService {
 	
-	private final static int INIT_TEXT = 80;
+	private final static int INIT_TEXT = 30;
 	
 	@Autowired
 	DocumentoRepository documentoRepository;
@@ -157,7 +157,8 @@ public class DocumentoService {
 			document.open();
 			
 			generateHeader(writer, document, cargo.getSetor().getNome());
-			int pageNumber = generateOficioBody(writer, document, documento);
+			List<Long> destinatariosIds = usuarioDocumentoRepository.getDestinatariosDoDoc(documento.getId());
+			int pageNumber = generateOficioBody(writer, document, documento, cargo, destinatariosIds, documento.getMensagemGeral(), documento.getMensagemSetor());
 			documento.setTotalPages(pageNumber);
 //			generateFooter(writer, document, documento);
 			
@@ -681,19 +682,75 @@ public class DocumentoService {
 	}
 	
 	@SuppressWarnings("deprecation")
-	protected int generateOficioBody(PdfWriter writer, Document document, Documento documento) {
+	protected int generateOficioBody(PdfWriter writer, Document document, Documento documento, Cargo cargo, List<Long> destinatariosIds, Boolean isMensagemGeral, Boolean isMensagemSetor) {
 		
 		try {
+			
 			Paragraph identificador = new Paragraph("Oficio N°: "+documento.getIdentificador());
 			
-			ColumnText.showTextAligned(writer.getDirectContent(), Element.ALIGN_CENTER, identificador, INIT_TEXT, 700, 0);
+			ColumnText.showTextAligned(writer.getDirectContent(), Element.ALIGN_LEFT, identificador, INIT_TEXT, 700, 0);
 			
 			Calendar calendar = Calendar.getInstance();
 			
 			Paragraph localData = new Paragraph("Fortaleza "+ calendar.get(Calendar.DAY_OF_MONTH) + " de " + getDia(calendar) + " de " + calendar.get(Calendar.YEAR));
 			
-			ColumnText.showTextAligned(writer.getDirectContent(), Element.ALIGN_CENTER, localData, 460, 680, 0);
+			ColumnText.showTextAligned(writer.getDirectContent(), Element.ALIGN_RIGHT, localData, 560, 680, 0);
 			
+			Paragraph deQuem = new Paragraph("De: "+documento.getUsuario().getTratamento()+" "+documento.getUsuario().getNome()+" - "+cargo.getNome() + " do " + cargo.getSetor().getNome());
+			ColumnText.showTextAligned(writer.getDirectContent(), Element.ALIGN_LEFT, deQuem, INIT_TEXT, 660, 0);
+			
+			if(isMensagemGeral) {
+				Paragraph saudacoes = new Paragraph("Prezados,");
+				ColumnText.showTextAligned(writer.getDirectContent(), Element.ALIGN_LEFT, saudacoes, INIT_TEXT, 0, 0);
+			} else if (isMensagemSetor) {
+				if(!destinatariosIds.isEmpty()) {
+					if(destinatariosIds.size() > 1) {
+						Paragraph saudacoes = new Paragraph("Prezados,");
+						ColumnText.showTextAligned(writer.getDirectContent(), Element.ALIGN_LEFT, saudacoes, INIT_TEXT, 0, 0);
+					} else {
+						
+						Paragraph saudacoes = new Paragraph("Prezado(a),");
+						ColumnText.showTextAligned(writer.getDirectContent(), Element.ALIGN_LEFT, saudacoes, INIT_TEXT, 0, 0);
+					}
+				}
+			} else {
+				if(!destinatariosIds.isEmpty()) {
+					if(destinatariosIds.size() > 1) {
+						
+					} else {
+						
+						Paragraph saudacoes = new Paragraph("Prezado(a),");
+						ColumnText.showTextAligned(writer.getDirectContent(), Element.ALIGN_LEFT, saudacoes, INIT_TEXT, 600, 0);
+						
+						Optional<Usuario> optUsuarioDestino = usuarioRepository.findById(destinatariosIds.get(0));
+						
+						if(optUsuarioDestino.isPresent()) {
+						
+							List<Cargo> cargosDestinatario = usuarioCargoRepository.getUserCargos(optUsuarioDestino.get().getId());
+							Cargo cargoDestinatario = null;
+							
+							if(cargosDestinatario.size() > 1) {
+								for(Cargo cargoDest : cargosDestinatario) {
+									if(cargoDest.getIsCargoPrincipal()) {
+										cargoDestinatario = cargoDest;
+									}
+								}
+							} else if (cargosDestinatario.size() == 1) {
+								cargoDestinatario = cargosDestinatario.get(0);
+							}
+							
+							if(cargoDestinatario != null) {
+								Paragraph paraQuem = new Paragraph("Para: "+optUsuarioDestino.get().getTratamento()+" "+optUsuarioDestino.get().getNome()+" - "+cargoDestinatario.getNome() + " do " + cargoDestinatario.getSetor().getNome());
+								ColumnText.showTextAligned(writer.getDirectContent(), Element.ALIGN_LEFT, paraQuem, INIT_TEXT, 640, 0);
+							}
+						
+						}
+					}
+				}
+			}
+			
+			
+			document.add(new Phrase("\n"));
 			document.add(new Phrase("\n"));
 			document.add(new Phrase("\n"));
 			document.add(new Phrase("\n"));
