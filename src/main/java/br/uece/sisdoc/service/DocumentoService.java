@@ -13,6 +13,8 @@ import java.util.Optional;
 import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -53,6 +55,9 @@ import br.uece.sisdoc.utils.HeaderFooterPageEvent;
 public class DocumentoService {
 	
 	private final static int INIT_TEXT = 30;
+	
+	@Autowired
+	private Environment env;
 	
 	@Autowired
 	DocumentoRepository documentoRepository;
@@ -143,7 +148,7 @@ public class DocumentoService {
 		try {
 			Documento documento = documentoRepository.getOne(id);
 			
-			String path = "/home/isaac/dev/iTextHelloWorld.pdf";
+			String path = env.getProperty("default-path-pdf");
 			
 			File file = new File(path);
 			file.createNewFile();
@@ -199,6 +204,7 @@ public class DocumentoService {
 			documentoToUpdate.setConteudo(documento.getConteudo());
 			documentoToUpdate.setMensagemGeral(documento.getMensagemGeral());
 			documentoToUpdate.setMensagemSetor(documento.getMensagemSetor());
+			documentoToUpdate.setAssunto(documento.getAssunto());
 			
 			documento = documentoRepository.save(documentoToUpdate);
 			
@@ -621,7 +627,11 @@ public class DocumentoService {
 		documento.setCodigo(generateCodDocumento()); //Nao esta no banco ainda
 		documento.setIdentificador(documento.getCodigo()+"/"+calendar.get(Calendar.YEAR));
 		
+		documentoDTO.setConteudo(documentoDTO.getConteudo().replaceAll(" align='justify'", ""));
+		documentoDTO.setConteudo(documentoDTO.getConteudo().replaceAll("<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;", "<p>"));
+		documentoDTO.setConteudo(documentoDTO.getConteudo().replaceAll("<p>", "<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"));
 		documentoDTO.setConteudo(documentoDTO.getConteudo().replaceAll("<p", "<p align='justify'")); //Justificando paragrafos
+		
 		
 		documento.setConteudo(documentoDTO.getConteudo());
 		documento.setDataCriacao(calendar.getTime());
@@ -634,16 +644,14 @@ public class DocumentoService {
 	}
 	
 	protected int generateHeader(PdfWriter writer, Document document, String setor) {
-		String img_uece = "/home/isaac/dev/brasao_uece.jpg";
+		
     	Image imageUece;
-    	
-    	String img_estado = "/home/isaac/dev/brasao_estado.jpg";
     	Image imageEstado;
     	
     	try {
     		
     		//ADICIONANDO IMAGEM UECE
-    		imageUece = Image.getInstance(img_uece);
+    		imageUece = Image.getInstance(env.getProperty("default-image-uece"));
     		imageUece.setAlignment(Element.ALIGN_LEFT);
     		imageUece.setAbsolutePosition(50, 750);
     		imageUece.scalePercent(18.0f, 18.0f);
@@ -657,10 +665,10 @@ public class DocumentoService {
     		ColumnText.showTextAligned(writer.getDirectContent(), Element.ALIGN_CENTER, dep, 295, 770, 0);
 
     		//ADICIONANDO IMAGEM ESTADO
-    		imageEstado = Image.getInstance(img_estado);
+    		imageEstado = Image.getInstance(env.getProperty("default-image-estado"));
     		imageEstado.setAlignment(Element.ALIGN_LEFT);
     		imageEstado.setAbsolutePosition(500, 750);
-    		imageEstado.scalePercent(2.5f, 2.5f);
+    		imageEstado.scalePercent(18.0f, 18.0f);
     		writer.getDirectContent().addImage(imageEstado, true);
     		
     		PdfContentByte canvas = writer.getDirectContent();
@@ -749,6 +757,12 @@ public class DocumentoService {
 				}
 			}
 			
+			if(documento.getAssunto() != null && !documento.getAssunto().equals("")) {
+				Paragraph assunto = new Paragraph("Assunto: "+documento.getAssunto());
+				ColumnText.showTextAligned(writer.getDirectContent(), Element.ALIGN_LEFT, assunto, INIT_TEXT, 620, 0);
+			}
+			
+			
 			
 			document.add(new Phrase("\n"));
 			document.add(new Phrase("\n"));
@@ -766,6 +780,11 @@ public class DocumentoService {
 			
 			HTMLWorker htmlWorker = new HTMLWorker(document);
 		    htmlWorker.parse(new StringReader(documento.getConteudo()));
+		    
+		    document.add(new Phrase("\n"));
+			document.add(new Phrase("Atenciosamente,"));
+			document.add(new Phrase("\n"));
+			document.add(new Phrase(documento.getUsuario().getNome()));
 			
 //			Paragraph conteudo = new Paragraph(documento.getConteudo());
 //			
