@@ -29,7 +29,7 @@ public class JWTAuthenticationFilter extends GenericFilterBean {
     		((HttpServletResponse) response).setStatus(200);
     		return;
     	}
-		
+    	
 		Authentication authentication = TokenAuthenticationService
 				.getAuthentication((HttpServletRequest) request);
 		

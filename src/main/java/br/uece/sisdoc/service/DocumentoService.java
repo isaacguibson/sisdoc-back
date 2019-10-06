@@ -89,6 +89,11 @@ public class DocumentoService {
 		try {
 		
 			Documento documento = dtoToDocumento(documentoDto);
+			
+			if(documento == null) {
+				return null;
+			}
+			
 			documento.setEnviada(false);
 			
 			Documento documentoSaved = documentoRepository.save(documento);
@@ -272,6 +277,53 @@ public class DocumentoService {
 		}
 		
 		return null;
+	}
+	
+	
+	public boolean send(Long id) {
+		
+		if(id != null) {
+			Optional<Documento> optDocumento = documentoRepository.findById(id);
+			
+			if(optDocumento.isPresent()) {
+				
+				Documento documento = optDocumento.get();
+				
+				documento.setEnviada(true);
+				
+				documentoRepository.save(documento);
+				
+				return true;
+				
+			}
+			
+		}
+		
+		return false;
+		
+	}
+	
+	public boolean cancelSend(Long id) {
+		
+		if(id != null) {
+			Optional<Documento> optDocumento = documentoRepository.findById(id);
+			
+			if(optDocumento.isPresent()) {
+				
+				Documento documento = optDocumento.get();
+				
+				documento.setEnviada(false);
+				
+				documentoRepository.save(documento);
+				
+				return true;
+				
+			}
+			
+		}
+		
+		return false;
+		
 	}
 	
 	
@@ -622,11 +674,14 @@ public class DocumentoService {
 		Optional<TipoDocumento> optionalTipoDocumento = tipoDocumentoRepository.findById(documentoDTO.getTipoDocumentoId());
 		if(optionalTipoDocumento.isPresent()) {
 			documento.setTipoDocumento(optionalTipoDocumento.get());
+		} else {
+			return null;
 		}
 		
-		documento.setCodigo(generateCodDocumento()); //Nao esta no banco ainda
+		documento.setCodigo(generateCodDocumento(documento.getTipoDocumento().getId())); //Nao esta no banco ainda
 		documento.setIdentificador(documento.getCodigo()+"/"+calendar.get(Calendar.YEAR));
 		
+		documentoDTO.setConteudo(documentoDTO.getConteudo().replaceAll(" class=\"ql-align-justify\"", ""));
 		documentoDTO.setConteudo(documentoDTO.getConteudo().replaceAll(" align='justify'", ""));
 		documentoDTO.setConteudo(documentoDTO.getConteudo().replaceAll("<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;", "<p>"));
 		documentoDTO.setConteudo(documentoDTO.getConteudo().replaceAll("<p>", "<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"));
@@ -853,7 +908,7 @@ public class DocumentoService {
 		}
 	}
 	
-	private Long generateCodDocumento(){
+	private Long generateCodDocumento(Long tipoDocumentoId){
 		
 		//Pegando data até o primeiro dia do ano posterior
 		Calendar calendar = Calendar.getInstance();
@@ -862,7 +917,8 @@ public class DocumentoService {
 		calendar.set(Calendar.MONTH, Calendar.JANUARY);
 		calendar.set(Calendar.YEAR, calendar.get(Calendar.YEAR) + 1);
 		
-		Long lastCodDocumento = documentoRepository.ultimoCodDocumento(calendar.getTime());
+//		Long lastCodDocumento = documentoRepository.ultimoCodDocumento(calendar.getTime());
+		Long lastCodDocumento = documentoRepository.ultimoCodDocumentoByDoc(tipoDocumentoId, calendar.getTime());
 		
 		if(lastCodDocumento == null) {
 			return 1L;

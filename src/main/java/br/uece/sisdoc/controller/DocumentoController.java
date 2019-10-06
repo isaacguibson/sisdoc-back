@@ -112,6 +112,15 @@ public class DocumentoController {
 		return documentoService.create(documento);
 	}
 	
+	@PutMapping("send/{id}")
+	public boolean send(@PathVariable Long id) {
+		return documentoService.send(id);
+	}
+	
+	@PutMapping("cancelsend/{id}")
+	public boolean cancelSend(@PathVariable Long id) {
+		return documentoService.cancelSend(id);
+	}
 	
 	@PostMapping("/send-to-user")
 	public List<UsuarioDocumento> sendToUser(@RequestBody UsuarioDocumentoDTO usuarioDocumento, Authentication authentication) {

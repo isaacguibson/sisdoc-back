@@ -19,6 +19,9 @@ public interface DocumentoRepository extends JpaRepository<Documento, Long>, Jpa
 	@Query(value = "SELECT MAX(doc.codigo) FROM Documento doc WHERE doc.dataCriacao < :dataFinal")
 	public Long ultimoCodDocumento(@Param("dataFinal") Date dataFinal);
 	
+	@Query(value = "SELECT MAX(doc.codigo) FROM Documento doc WHERE doc.tipoDocumento.id = :tipoDocumentoId AND doc.dataCriacao < :dataFinal")
+	public Long ultimoCodDocumentoByDoc(@Param("tipoDocumentoId") Long tipoDocumentoId, @Param("dataFinal") Date dataFinal);
+	
 	/**
 	 * Pega todos os documentos do usuario do parametro
 	 * */
