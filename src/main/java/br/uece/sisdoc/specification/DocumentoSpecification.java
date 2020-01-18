@@ -45,6 +45,17 @@ public class DocumentoSpecification {
 		};
 	}
 	
+	public Specification<Documento> orderById(){
+		
+		return (root, criteriaQuery, criteriaBuilder) -> {
+			return criteriaQuery.orderBy(criteriaBuilder.desc(root.get("id"))).getRestriction();
+//			Join<Documento,Usuario> docUser = root.join("usuario");
+//			Join<UsuarioDocumento,Usuario> usuerDoc = docUser.join("usuarioDestino");
+//			return criteriaBuilder.equal(usuerDoc.get("usuarioDestino").get("id"), id);
+			
+		};
+	}
+	
 	public Specification<Documento> filterById(Long id){
 		
 		return id == null ? null : (root, criteriaQuery, criteriaBuilder) ->

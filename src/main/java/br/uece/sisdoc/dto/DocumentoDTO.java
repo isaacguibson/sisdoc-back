@@ -27,6 +27,16 @@ public class DocumentoDTO {
 	private Boolean mensagemGeral;
 	
 	private Boolean mensagemSetor;
+	
+	private Integer requerido; //para requerimentos
+	
+	private Integer vinculo; //para requerimentos
+	
+	private List<Integer> rotinas; //para requerimentos
+	
+	private List<GenericListObject> outrasRotinas; //para requerimentos
+	
+	private List<GenericListObject> informacoes; //para requerimentos
 
 	public Long getId() {
 		return id;
@@ -122,6 +132,46 @@ public class DocumentoDTO {
 
 	public void setAssunto(String assunto) {
 		this.assunto = assunto;
+	}
+
+	public Integer getRequerido() {
+		return requerido;
+	}
+
+	public void setRequerido(Integer requerido) {
+		this.requerido = requerido;
+	}
+
+	public Integer getVinculo() {
+		return vinculo;
+	}
+
+	public void setVinculo(Integer vinculo) {
+		this.vinculo = vinculo;
+	}
+
+	public List<Integer> getRotinas() {
+		return rotinas;
+	}
+
+	public void setRotinas(List<Integer> rotinas) {
+		this.rotinas = rotinas;
+	}
+
+	public List<GenericListObject> getInformacoes() {
+		return informacoes;
+	}
+
+	public void setInformacoes(List<GenericListObject> informacoes) {
+		this.informacoes = informacoes;
+	}
+
+	public List<GenericListObject> getOutrasRotinas() {
+		return outrasRotinas;
+	}
+
+	public void setOutrasRotinas(List<GenericListObject> outrasRotinas) {
+		this.outrasRotinas = outrasRotinas;
 	}
 	
 }

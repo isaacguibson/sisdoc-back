@@ -30,17 +30,14 @@ public class Usuario {
 	@Column(name = "senha", nullable = false)
 	private String senha;
 	
-//	@ManyToOne(fetch = FetchType.EAGER)
-//	@JoinColumn(name = "setor_id", referencedColumnName = "id_setor")
-//	private Setor setor;
-//	
-//	@ManyToOne(fetch = FetchType.EAGER)
-//	@JoinColumn(name = "cargo_id", referencedColumnName = "id_cargo")
-//	private Cargo cargo;
-	
 	@Column(name = "tratamento", nullable = false)
 	private String tratamento;
+	
+	@Column(name = "matricula", nullable = true)
+	private String matricula;
 
+	@Column(name = "curso", nullable = true)
+	private String curso;
 	
 	//Getters e Setters
 	public Long getId() {
@@ -75,22 +72,6 @@ public class Usuario {
 		this.senha = senha;
 	}
 
-//	public Setor getSetor() {
-//		return setor;
-//	}
-//
-//	public void setSetor(Setor setor) {
-//		this.setor = setor;
-//	}
-//
-//	public Cargo getCargo() {
-//		return cargo;
-//	}
-//
-//	public void setCargo(Cargo cargo) {
-//		this.cargo = cargo;
-//	}
-
 	public String getTratamento() {
 		return tratamento;
 	}
@@ -98,7 +79,21 @@ public class Usuario {
 	public void setTratamento(String tratamento) {
 		this.tratamento = tratamento;
 	}
-	
-	
+
+	public String getMatricula() {
+		return matricula;
+	}
+
+	public void setMatricula(String matricula) {
+		this.matricula = matricula;
+	}
+
+	public String getCurso() {
+		return curso;
+	}
+
+	public void setCurso(String curso) {
+		this.curso = curso;
+	}
 	
 }

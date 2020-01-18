@@ -1,6 +1,7 @@
 package br.uece.sisdoc.model;
 
 import java.util.Date;
+import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -17,6 +18,8 @@ import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
 import org.springframework.format.annotation.DateTimeFormat;
+
+import br.uece.sisdoc.dto.GenericListObject;
 
 @Entity
 @Table(name="DOCUMENTO")
@@ -45,7 +48,7 @@ public class Documento {
 	@Column(name = "assunto", nullable = true, columnDefinition = "VARCHAR(255)")
 	private String assunto;
 	
-	@Column(name = "conteudo", nullable = false, columnDefinition = "TEXT")
+	@Column(name = "conteudo", nullable = true, columnDefinition = "TEXT")
 	private String conteudo;
 	
 	@Column(name = "data_criacao", columnDefinition = "TIMESTAMP(6)", nullable = false)
@@ -62,7 +65,22 @@ public class Documento {
 	
 	//Indica se mensagem é para determinado(s) setores
 	@Column(name = "mensagem_setor", nullable = true)
-	private Boolean mensagemSetor;
+	private Boolean mensagemSetor;	
+	
+	@Column(name = "requerido", nullable = true)
+	private Integer requerido; //para requerimentos
+	
+	@Column(name = "vinculo", nullable = true)
+	private Integer vinculo; //para requerimentos
+	
+	@Transient
+	private List<Rotina> rotinas;
+	
+	@Transient
+	private List<GenericListObject> outrasRotinas;
+	
+	@Transient
+	private List<GenericListObject> informacoes;
 	
 	@Transient
 	private int totalPages;
@@ -162,6 +180,46 @@ public class Documento {
 
 	public void setAssunto(String assunto) {
 		this.assunto = assunto;
+	}
+
+	public Integer getRequerido() {
+		return requerido;
+	}
+
+	public void setRequerido(Integer requerido) {
+		this.requerido = requerido;
+	}
+
+	public Integer getVinculo() {
+		return vinculo;
+	}
+
+	public void setVinculo(Integer vinculo) {
+		this.vinculo = vinculo;
+	}
+
+	public List<Rotina> getRotinas() {
+		return rotinas;
+	}
+
+	public void setRotinas(List<Rotina> rotinas) {
+		this.rotinas = rotinas;
+	}
+
+	public List<GenericListObject> getOutrasRotinas() {
+		return outrasRotinas;
+	}
+
+	public void setOutrasRotinas(List<GenericListObject> outrasRotinas) {
+		this.outrasRotinas = outrasRotinas;
+	}
+
+	public List<GenericListObject> getInformacoes() {
+		return informacoes;
+	}
+
+	public void setInformacoes(List<GenericListObject> informacoes) {
+		this.informacoes = informacoes;
 	}
 	
 }

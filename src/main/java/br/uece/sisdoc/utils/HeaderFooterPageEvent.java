@@ -34,8 +34,7 @@ public class HeaderFooterPageEvent extends PdfPageEventHelper{
     // Exemplo Footer    
     public void onEndPage(PdfWriter writer, Document document) {
     	
-    	if(document.getPageNumber() == getDocumento().getTotalPages()) {
-    		
+    	if(documento.getTipoDocumento().getId() == 1) {
     		Paragraph name = new Paragraph(documento.getUsuario().getTratamento()+" "+documento.getUsuario().getNome());
     		Paragraph department = new Paragraph(cargo.getNome() + " do " + cargo.getSetor().getNome() + " da UECE.");
     		

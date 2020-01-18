@@ -21,6 +21,9 @@ public class Setor {
 	@Column(name = "nome", nullable = false)
 	private String nome;
 	
+	@Column(name = "sigla", nullable = true)
+	private String sigla;
+	
 	//Getters e Setters
 	public Long getId() {
 		return id;
@@ -37,7 +40,13 @@ public class Setor {
 	public void setNome(String nome) {
 		this.nome = nome;
 	}
-	
-	
+
+	public String getSigla() {
+		return sigla;
+	}
+
+	public void setSigla(String sigla) {
+		this.sigla = sigla;
+	}
 	
 }

@@ -105,9 +105,162 @@ public class DocumentoController {
 		
 	}
 	
+	@GetMapping("/portaria/{id}")
+	public ResponseEntity<byte[]> createPortariaFile(@PathVariable Long id, @RequestParam Long cargoId) {
+		
+		if(cargoId == null) {
+			return null;
+		}
+		
+		try {
+			String path = documentoService.generatePortaria(id, cargoId);
+			
+			File file = new File(path);
+			
+			byte[] contents = Files.readAllBytes(file.toPath());
+			
+			HttpHeaders headers = new HttpHeaders();
+			
+			headers.setContentType(MediaType.parseMediaType("application/pdf"));
+			
+			headers.setContentDispositionFormData("document.pdf", "document.pdf");
+			
+			headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
+			
+			ResponseEntity<byte[]> response = new ResponseEntity<>(contents, headers, HttpStatus.OK);
+			
+			return response;
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+		return null;
+		
+	}
+	
+	@GetMapping("/declaracao/{id}")
+	public ResponseEntity<byte[]> createDeclaracaoFile(@PathVariable Long id, @RequestParam Long cargoId) {
+		
+		if(cargoId == null) {
+			return null;
+		}
+		
+		try {
+			String path = documentoService.generateDeclaracao(id, cargoId);
+			
+			File file = new File(path);
+			
+			byte[] contents = Files.readAllBytes(file.toPath());
+			
+			HttpHeaders headers = new HttpHeaders();
+			
+			headers.setContentType(MediaType.parseMediaType("application/pdf"));
+			
+			headers.setContentDispositionFormData("document.pdf", "document.pdf");
+			
+			headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
+			
+			ResponseEntity<byte[]> response = new ResponseEntity<>(contents, headers, HttpStatus.OK);
+			
+			return response;
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+		return null;
+		
+	}
+	
+	@GetMapping("/despacho/{id}")
+	public ResponseEntity<byte[]> createDespachoFile(@PathVariable Long id, @RequestParam Long cargoId) {
+		
+		if(cargoId == null) {
+			return null;
+		}
+		
+		try {
+			String path = documentoService.generateDespacho(id, cargoId);
+			
+			File file = new File(path);
+			
+			byte[] contents = Files.readAllBytes(file.toPath());
+			
+			HttpHeaders headers = new HttpHeaders();
+			
+			headers.setContentType(MediaType.parseMediaType("application/pdf"));
+			
+			headers.setContentDispositionFormData("document.pdf", "document.pdf");
+			
+			headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
+			
+			ResponseEntity<byte[]> response = new ResponseEntity<>(contents, headers, HttpStatus.OK);
+			
+			return response;
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+		return null;
+		
+	}
+	
+	@GetMapping("/requerimento/{id}")
+	public ResponseEntity<byte[]> createRequerimentoFile(@PathVariable Long id, @RequestParam Long cargoId) {
+		if(cargoId == null) {
+			return null;
+		}
+		
+		try {
+			String path = documentoService.generateRequerimento(id, cargoId);
+			
+			File file = new File(path);
+			
+			byte[] contents = Files.readAllBytes(file.toPath());
+			
+			HttpHeaders headers = new HttpHeaders();
+			
+			headers.setContentType(MediaType.parseMediaType("application/pdf"));
+			
+			headers.setContentDispositionFormData("document.pdf", "document.pdf");
+			
+			headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
+			
+			ResponseEntity<byte[]> response = new ResponseEntity<>(contents, headers, HttpStatus.OK);
+			
+			return response;
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
 	
 	@PostMapping("/oficio")
-	public Documento create(@RequestBody DocumentoDTO documento) {
+	public Documento createOficio(@RequestBody DocumentoDTO documento) {
+		
+		return documentoService.create(documento);
+	}
+	
+	@PostMapping("/portaria")
+	public Documento createPortaria(@RequestBody DocumentoDTO documento) {
+		
+		return documentoService.create(documento);
+	}
+	
+	@PostMapping("/declaracao")
+	public Documento createDeclaracao(@RequestBody DocumentoDTO documento) {
+		
+		return documentoService.create(documento);
+	}
+	
+	@PostMapping("/despacho")
+	public Documento createDespacho(@RequestBody DocumentoDTO documento) {
+		
+		return documentoService.create(documento);
+	}
+	
+	@PostMapping("/requerimento")
+	public Documento createRequerimento(@RequestBody DocumentoDTO documento) {
 		
 		return documentoService.create(documento);
 	}
@@ -136,9 +289,13 @@ public class DocumentoController {
 	}
 	
 	@DeleteMapping("/{id}")
-	public void delete(@PathVariable Long id) {
+	public ResponseEntity<?> delete(@PathVariable Long id) {
 		
-		documentoService.delete(id);
+		if(!documentoService.delete(id)) {
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+		} else {
+			return new ResponseEntity<>(HttpStatus.OK);
+		}
 	}
 	
 }
