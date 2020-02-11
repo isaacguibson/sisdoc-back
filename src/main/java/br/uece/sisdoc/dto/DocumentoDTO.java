@@ -32,7 +32,7 @@ public class DocumentoDTO {
 	
 	private Integer vinculo; //para requerimentos
 	
-	private List<Integer> rotinas; //para requerimentos
+	private List<Long> rotinas; //para requerimentos
 	
 	private List<GenericListObject> outrasRotinas; //para requerimentos
 	
@@ -150,11 +150,11 @@ public class DocumentoDTO {
 		this.vinculo = vinculo;
 	}
 
-	public List<Integer> getRotinas() {
+	public List<Long> getRotinas() {
 		return rotinas;
 	}
 
-	public void setRotinas(List<Integer> rotinas) {
+	public void setRotinas(List<Long> rotinas) {
 		this.rotinas = rotinas;
 	}
 

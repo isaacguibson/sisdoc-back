@@ -235,6 +235,37 @@ public class DocumentoController {
 		return null;
 	}
 	
+	@GetMapping("/ata/{id}")
+	public ResponseEntity<byte[]> createAtaFile(@PathVariable Long id, @RequestParam Long cargoId) {
+		if(cargoId == null) {
+			return null;
+		}
+		
+		try {
+			String path = documentoService.generateAta(id, cargoId);
+			
+			File file = new File(path);
+			
+			byte[] contents = Files.readAllBytes(file.toPath());
+			
+			HttpHeaders headers = new HttpHeaders();
+			
+			headers.setContentType(MediaType.parseMediaType("application/pdf"));
+			
+			headers.setContentDispositionFormData("document.pdf", "document.pdf");
+			
+			headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
+			
+			ResponseEntity<byte[]> response = new ResponseEntity<>(contents, headers, HttpStatus.OK);
+			
+			return response;
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
+	
 	@PostMapping("/oficio")
 	public Documento createOficio(@RequestBody DocumentoDTO documento) {
 		

@@ -12,6 +12,7 @@ import java.io.StringReader;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -63,6 +64,7 @@ import br.uece.sisdoc.dto.GenericListObject;
 import br.uece.sisdoc.model.Cargo;
 import br.uece.sisdoc.model.Documento;
 import br.uece.sisdoc.model.DocumentoRotina;
+import br.uece.sisdoc.model.MembroColegiado;
 import br.uece.sisdoc.model.Rotina;
 import br.uece.sisdoc.model.Setor;
 import br.uece.sisdoc.model.TipoDocumento;
@@ -92,6 +94,7 @@ import net.sf.jasperreports.engine.JasperExportManager;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
+import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import net.sf.jasperreports.engine.export.JRPdfExporter;
 
 @Service
@@ -218,11 +221,10 @@ public class DocumentoService {
 				}
 			}
 			
-			for(Integer rotinaID : documentoDTO.getRotinas()) {
+			for(Long rotinaID : documentoDTO.getRotinas()) {
 				DocumentoRotina docRotina = new DocumentoRotina();
 				docRotina.setDocumento(documento);
-				Long id = Integer.toUnsignedLong(rotinaID);
-				Optional<Rotina> optRotina = rotinaRepository.findById(id);
+				Optional<Rotina> optRotina = rotinaRepository.findById(rotinaID);
 				if(optRotina.isPresent()) {
 					docRotina.setRotina(optRotina.get());
 					documentoRotinaRepository.save(docRotina);
@@ -369,6 +371,82 @@ public class DocumentoService {
 		
 	}
 	
+	public String generateAta(Long id, Long cargoId) {
+		try {
+			Documento documento = findById(id);
+			Cargo cargo = null;
+			
+			if(documento == null) {
+				return null;
+			} 
+			
+			Optional<Cargo> optCargo = cargoRepository.findById(cargoId);
+			
+			if(optCargo.isPresent()) {
+				cargo = optCargo.get();
+			} else {
+				return null;
+			}
+			
+			JasperReport jasper = JasperCompileManager.compileReport(REPORTS_LOCATION+"ata.jrxml");
+			Map<String, Object> map = new HashMap<>();
+			
+			map.put("TITULO", "ATA DA REUNIÃO DO COLEGIADO DO CURSO DE CIÊNCIA DA COMPUTAÇÂO DA UNIVERSIDADE ESTADUAL DO CEARÁ. REALIZADA EM 12/09/2012.");
+			map.put("CONTEUDO", "Aos doze dias do mês de Setembro do ano de dois mil e doze, na sala A da Pós-Graduação em Computação, foi realizada às quatorze horas e quinze minutos, a reunião do Colegiado do Curso de Computação com a presença de 15 docentes e 07 discentes que formam o Aos doze dias do mês de Setembro do ano de dois mil e doze, na sala A da Pós-Graduação em Computação, foi realizada às quatorze horas e quinze minutos, a reunião do Colegiado do Curso de Computação com a presença de 15 docentes e 07 discentes que formam o");
+			map.put("LOCAL_E_DATA", "Fortaleza, 28 de Janeiro de 2020");
+			
+			List<MembroColegiado> membros = new ArrayList<MembroColegiado>();
+			
+			MembroColegiado membro1 = new MembroColegiado("Isaac Guibson", "Diretor de Marketing da Reitoria");
+			membros.add(membro1);
+			
+			MembroColegiado membro2 = new MembroColegiado("Luan Marques", "Vice-Presidente de Marketing da Reitoria");
+			membros.add(membro2);
+			
+			MembroColegiado membro3 = new MembroColegiado("Luan Marques", "Vice-Presidente de Marketing da Reitoria");
+			membros.add(membro3);
+			
+			MembroColegiado membro4 = new MembroColegiado("Luan Marques", "Vice-Presidente de Marketing da Reitoria");
+			membros.add(membro4);
+			
+			MembroColegiado membro5 = new MembroColegiado("Luan Marques", "Vice-Presidente de Marketing da Reitoria");
+			membros.add(membro5);
+			
+			MembroColegiado membro6 = new MembroColegiado("Luan Marques", "Vice-Presidente de Marketing da Reitoria");
+			membros.add(membro6);
+			
+			MembroColegiado membro7 = new MembroColegiado("Luan Marques", "Vice-Presidente de Marketing da Reitoria");
+			membros.add(membro7);
+			
+			MembroColegiado membro8 = new MembroColegiado("Luan Marques", "Vice-Presidente de Marketing da Reitoria");
+			membros.add(membro8);
+			
+			MembroColegiado membro9 = new MembroColegiado("Luan Marques", "Vice-Presidente de Marketing da Reitoria");
+			membros.add(membro9);
+			
+			MembroColegiado membro10 = new MembroColegiado("Luan Marques", "Vice-Presidente de Marketing da Reitoria");
+			membros.add(membro10);
+			
+			JRDataSource jrds = new JRBeanCollectionDataSource(membros);
+			map.put("LIST", jrds);
+			
+			JRDataSource jrDataSource = new JREmptyDataSource();
+			
+			JasperPrint print = JasperFillManager.fillReport(jasper, map, jrDataSource);
+			
+			JasperExportManager.exportReportToPdfFile(print, EXPORTED_REPORT_LOCATION+"ata.pdf");
+			
+			File file = new File(EXPORTED_REPORT_LOCATION+"ata.pdf");
+			
+            return file.getAbsolutePath();
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
+	
 	public String generateRequerimento(Long id, Long cargoId) {
 		
 		try {
@@ -398,15 +476,16 @@ public class DocumentoService {
 			map.put("MATRICULA", documento.getUsuario().getMatricula());
 			map.put("REQUERIDO", documento.getRequerido());
 			
+			DocumentoDTO documentoDTO = documentoToDTO(documento);
+			
 			List<Long> rotinasJasper = new ArrayList<Long>();
-			if(documento.getRotinas() != null && documento.getRotinas().size() > 0) {
-				for(Rotina rotina : documento.getRotinas()) {
-					rotinasJasper.add(rotina.getId());
+			if(documentoDTO.getRotinas() != null && documentoDTO.getRotinas().size() > 0) {
+				for(Long rotinaId : documentoDTO.getRotinas()) {
+					rotinasJasper.add(rotinaId);
 				}
 			}
 			map.put("ROTINAS", rotinasJasper);
 			
-			DocumentoDTO documentoDTO = documentoToDTO(documento);
 			if(documentoDTO != null) {
 				if(documentoDTO.getOutrasRotinas() != null) {
 					for(int index = 0; index < documentoDTO.getOutrasRotinas().size(); index++) {
@@ -1040,7 +1119,7 @@ public class DocumentoService {
 		//REQUERIMENTO
 		if(documento.getTipoDocumento().getId() == 4) {
 			//BUSCANDO ROTINAS
-			documentoDTO.setRotinas(new ArrayList<Integer>());
+			documentoDTO.setRotinas(new ArrayList<Long>());
 			List<DocumentoRotina> documentosRotina = new ArrayList<DocumentoRotina>();
 			DocumentoRotinaSpecification docRotinaSpec = new DocumentoRotinaSpecification();
 			documentosRotina
@@ -1050,7 +1129,7 @@ public class DocumentoService {
 			
 			if(documentosRotina.size()>0) {
 				for(DocumentoRotina docRotina : documentosRotina) {
-					documentoDTO.getRotinas().add(docRotina.getRotina().getId().intValue());
+					documentoDTO.getRotinas().add(docRotina.getRotina().getId());
 				}
 			}
 			
