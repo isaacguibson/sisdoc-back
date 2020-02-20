@@ -3,16 +3,11 @@ package br.uece.sisdoc.service;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.StringReader;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -22,7 +17,6 @@ import java.util.Optional;
 import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -32,21 +26,18 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
-import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.Element;
 import com.itextpdf.text.Font;
 import com.itextpdf.text.Image;
 import com.itextpdf.text.Paragraph;
 import com.itextpdf.text.Phrase;
-import com.itextpdf.text.html.simpleparser.HTMLWorker;
 import com.itextpdf.text.pdf.CMYKColor;
 import com.itextpdf.text.pdf.ColumnText;
 import com.itextpdf.text.pdf.PdfContentByte;
 import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfWriter;
 import com.itextpdf.tool.xml.XMLWorker;
-import com.itextpdf.tool.xml.XMLWorkerFontProvider;
 import com.itextpdf.tool.xml.XMLWorkerHelper;
 import com.itextpdf.tool.xml.html.Tags;
 import com.itextpdf.tool.xml.parser.XMLParser;
@@ -85,16 +76,11 @@ import br.uece.sisdoc.specification.GenericListObjectSpecification;
 import br.uece.sisdoc.utils.HeaderFooterPageEvent;
 import net.sf.jasperreports.engine.JRDataSource;
 import net.sf.jasperreports.engine.JREmptyDataSource;
-import net.sf.jasperreports.engine.JRException;
-import net.sf.jasperreports.engine.JRExporter;
-import net.sf.jasperreports.engine.JRExporterParameter;
 import net.sf.jasperreports.engine.JasperCompileManager;
 import net.sf.jasperreports.engine.JasperExportManager;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
-import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
-import net.sf.jasperreports.engine.export.JRPdfExporter;
 
 @Service
 public class DocumentoService {
@@ -776,7 +762,7 @@ public class DocumentoService {
 		
 	}
 	
-	private void excluirEnviosByUserIds(Documento documento, List<Long> idsParaExcluir) {
+	public void excluirEnviosByUserIds(Documento documento, List<Long> idsParaExcluir) {
 		
 		for(Long idParaExcluir : idsParaExcluir) {
 			List<UsuarioDocumento> usuarioDocumentos = usuarioDocumentoRepository.getUserDocByUserDestIdAndDocId(idParaExcluir, documento.getId());
@@ -1246,7 +1232,6 @@ public class DocumentoService {
     	return 0;
 	}
 	
-	@SuppressWarnings("deprecation")
 	protected int generateOficioBody(PdfWriter writer, Document document, Documento documento, Cargo cargo, List<Long> destinatariosIds, Boolean isMensagemGeral, Boolean isMensagemSetor) {
 		
 		try {
@@ -1659,7 +1644,6 @@ public class DocumentoService {
 		
 	}
 	
-	@SuppressWarnings("deprecation")
 	protected int generatePortariaBody(PdfWriter writer, Document document, Documento documento, Cargo cargo, List<Long> destinatariosIds, Boolean isMensagemGeral, Boolean isMensagemSetor) {
 		
 		try {
