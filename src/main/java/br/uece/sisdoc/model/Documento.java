@@ -73,6 +73,10 @@ public class Documento {
 	@Column(name = "vinculo", nullable = true)
 	private Integer vinculo; //para requerimentos
 	
+	@ManyToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "documento_status_id", referencedColumnName = "id_documento_status")
+	private DocumentoStatus documentoStatus;
+	
 	@Transient
 	private List<Rotina> rotinas;
 	

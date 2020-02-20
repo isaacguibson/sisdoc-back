@@ -64,7 +64,6 @@ import br.uece.sisdoc.dto.GenericListObject;
 import br.uece.sisdoc.model.Cargo;
 import br.uece.sisdoc.model.Documento;
 import br.uece.sisdoc.model.DocumentoRotina;
-import br.uece.sisdoc.model.MembroColegiado;
 import br.uece.sisdoc.model.Rotina;
 import br.uece.sisdoc.model.Setor;
 import br.uece.sisdoc.model.TipoDocumento;
@@ -395,40 +394,40 @@ public class DocumentoService {
 			map.put("CONTEUDO", "Aos doze dias do mês de Setembro do ano de dois mil e doze, na sala A da Pós-Graduação em Computação, foi realizada às quatorze horas e quinze minutos, a reunião do Colegiado do Curso de Computação com a presença de 15 docentes e 07 discentes que formam o Aos doze dias do mês de Setembro do ano de dois mil e doze, na sala A da Pós-Graduação em Computação, foi realizada às quatorze horas e quinze minutos, a reunião do Colegiado do Curso de Computação com a presença de 15 docentes e 07 discentes que formam o");
 			map.put("LOCAL_E_DATA", "Fortaleza, 28 de Janeiro de 2020");
 			
-			List<MembroColegiado> membros = new ArrayList<MembroColegiado>();
+//			List<MembroColegiado> membros = new ArrayList<MembroColegiado>();
+//			
+//			MembroColegiado membro1 = new MembroColegiado("Isaac Guibson", "Diretor de Marketing da Reitoria");
+//			membros.add(membro1);
+//			
+//			MembroColegiado membro2 = new MembroColegiado("Luan Marques", "Vice-Presidente de Marketing da Reitoria");
+//			membros.add(membro2);
+//			
+//			MembroColegiado membro3 = new MembroColegiado("Luan Marques", "Vice-Presidente de Marketing da Reitoria");
+//			membros.add(membro3);
+//			
+//			MembroColegiado membro4 = new MembroColegiado("Luan Marques", "Vice-Presidente de Marketing da Reitoria");
+//			membros.add(membro4);
+//			
+//			MembroColegiado membro5 = new MembroColegiado("Luan Marques", "Vice-Presidente de Marketing da Reitoria");
+//			membros.add(membro5);
+//			
+//			MembroColegiado membro6 = new MembroColegiado("Luan Marques", "Vice-Presidente de Marketing da Reitoria");
+//			membros.add(membro6);
+//			
+//			MembroColegiado membro7 = new MembroColegiado("Luan Marques", "Vice-Presidente de Marketing da Reitoria");
+//			membros.add(membro7);
+//			
+//			MembroColegiado membro8 = new MembroColegiado("Luan Marques", "Vice-Presidente de Marketing da Reitoria");
+//			membros.add(membro8);
+//			
+//			MembroColegiado membro9 = new MembroColegiado("Luan Marques", "Vice-Presidente de Marketing da Reitoria");
+//			membros.add(membro9);
+//			
+//			MembroColegiado membro10 = new MembroColegiado("Luan Marques", "Vice-Presidente de Marketing da Reitoria");
+//			membros.add(membro10);
 			
-			MembroColegiado membro1 = new MembroColegiado("Isaac Guibson", "Diretor de Marketing da Reitoria");
-			membros.add(membro1);
-			
-			MembroColegiado membro2 = new MembroColegiado("Luan Marques", "Vice-Presidente de Marketing da Reitoria");
-			membros.add(membro2);
-			
-			MembroColegiado membro3 = new MembroColegiado("Luan Marques", "Vice-Presidente de Marketing da Reitoria");
-			membros.add(membro3);
-			
-			MembroColegiado membro4 = new MembroColegiado("Luan Marques", "Vice-Presidente de Marketing da Reitoria");
-			membros.add(membro4);
-			
-			MembroColegiado membro5 = new MembroColegiado("Luan Marques", "Vice-Presidente de Marketing da Reitoria");
-			membros.add(membro5);
-			
-			MembroColegiado membro6 = new MembroColegiado("Luan Marques", "Vice-Presidente de Marketing da Reitoria");
-			membros.add(membro6);
-			
-			MembroColegiado membro7 = new MembroColegiado("Luan Marques", "Vice-Presidente de Marketing da Reitoria");
-			membros.add(membro7);
-			
-			MembroColegiado membro8 = new MembroColegiado("Luan Marques", "Vice-Presidente de Marketing da Reitoria");
-			membros.add(membro8);
-			
-			MembroColegiado membro9 = new MembroColegiado("Luan Marques", "Vice-Presidente de Marketing da Reitoria");
-			membros.add(membro9);
-			
-			MembroColegiado membro10 = new MembroColegiado("Luan Marques", "Vice-Presidente de Marketing da Reitoria");
-			membros.add(membro10);
-			
-			JRDataSource jrds = new JRBeanCollectionDataSource(membros);
-			map.put("LIST", jrds);
+//			JRDataSource jrds = new JRBeanCollectionDataSource(membros);
+//			map.put("LIST", jrds);
 			
 			JRDataSource jrDataSource = new JREmptyDataSource();
 			
