@@ -86,9 +86,9 @@ import net.sf.jasperreports.engine.JasperReport;
 public class DocumentoService {
 	
 	private final static int INIT_TEXT = 30;
-	private final static String REPORTS_LOCATION = "C:\\Users\\Isaac\\documentos\\reports\\";
-	private final static String EXPORTED_REPORT_LOCATION = "C:\\Users\\Isaac\\documentos\\exported_reports\\";
-	private final static String HTML_LOCATION = "C:\\Users\\Isaac\\documentos\\htmls\\";
+	// private final static String REPORTS_LOCATION = "C:\\Users\\Isaac\\documentos\\reports\\";
+	// private final static String EXPORTED_REPORT_LOCATION = "C:\\Users\\Isaac\\documentos\\exported_reports\\";
+	// private final static String HTML_LOCATION = "C:\\Users\\Isaac\\documentos\\htmls\\";
 	
 	@Autowired
 	private Environment env;
@@ -373,7 +373,7 @@ public class DocumentoService {
 				return null;
 			}
 			
-			JasperReport jasper = JasperCompileManager.compileReport(REPORTS_LOCATION+"ata.jrxml");
+			JasperReport jasper = JasperCompileManager.compileReport(env.getProperty("REPORTS_LOCATION")+"ata.jrxml");
 			Map<String, Object> map = new HashMap<>();
 			
 			map.put("TITULO", "ATA DA REUNIÃO DO COLEGIADO DO CURSO DE CIÊNCIA DA COMPUTAÇÂO DA UNIVERSIDADE ESTADUAL DO CEARÁ. REALIZADA EM 12/09/2012.");
@@ -419,9 +419,9 @@ public class DocumentoService {
 			
 			JasperPrint print = JasperFillManager.fillReport(jasper, map, jrDataSource);
 			
-			JasperExportManager.exportReportToPdfFile(print, EXPORTED_REPORT_LOCATION+"ata.pdf");
+			JasperExportManager.exportReportToPdfFile(print, env.getProperty("EXPORTED_REPORT_LOCATION")+"ata.pdf");
 			
-			File file = new File(EXPORTED_REPORT_LOCATION+"ata.pdf");
+			File file = new File(env.getProperty("EXPORTED_REPORT_LOCATION")+"ata.pdf");
 			
             return file.getAbsolutePath();
 			
@@ -451,7 +451,7 @@ public class DocumentoService {
 				return null;
 			}
 			
-			JasperReport jasper = JasperCompileManager.compileReport(REPORTS_LOCATION+"requerimento.jrxml");
+			JasperReport jasper = JasperCompileManager.compileReport(env.getProperty("REPORTS_LOCATION")+"requerimento.jrxml");
 			Map<String, Object> map = new HashMap<>();
 			
 			map.put("NOME", documento.getUsuario().getNome().toUpperCase());
@@ -523,9 +523,9 @@ public class DocumentoService {
 //
 //            exporter.exportReport();
 			
-			JasperExportManager.exportReportToPdfFile(print, EXPORTED_REPORT_LOCATION+"requerimento.pdf");
+			JasperExportManager.exportReportToPdfFile(print, env.getProperty("EXPORTED_REPORT_LOCATION")+"requerimento.pdf");
 			
-			File file = new File(EXPORTED_REPORT_LOCATION+"requerimento.pdf");
+			File file = new File(env.getProperty("EXPORTED_REPORT_LOCATION")+"requerimento.pdf");
 			
             return file.getAbsolutePath();
             
@@ -1811,7 +1811,7 @@ public class DocumentoService {
 			
 			String rootPath = env.getProperty("SISDOC_FILES");
 			
-			File file = new File(HTML_LOCATION+documento.getUsuario().getId()+'_'+documento.getId()+".html");
+			File file = new File(env.getProperty("HTML_LOCATION")+documento.getUsuario().getId()+'_'+documento.getId()+".html");
 			
 			if(file.exists()) {
 				file.delete();
