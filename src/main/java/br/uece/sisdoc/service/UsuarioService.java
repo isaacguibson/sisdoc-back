@@ -72,6 +72,27 @@ public class UsuarioService {
 			return null;
 		}
 	}
+	
+	public List<Usuario> findByListId(List<Long> ids) {
+		
+		List<Usuario> usuarios = new ArrayList<Usuario>();
+		if(ids == null || ids.size() == 0) {
+			return usuarios;
+		}
+		
+		Optional<Usuario> optionalUsuario = null;
+		for(Long id : ids) {
+			optionalUsuario = usuarioRepository.findById(id);
+			
+			if(optionalUsuario != null && optionalUsuario.isPresent()) {
+				usuarios.add(optionalUsuario.get());
+			} else {
+				continue;
+			}
+		}
+		
+		return usuarios;
+	}
 
 	public Page<Usuario> findAll(Pageable pageable, UsuarioDTO usuarioDTO) {
 		

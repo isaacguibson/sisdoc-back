@@ -74,8 +74,12 @@ public class Documento {
 	private Integer vinculo; //para requerimentos
 	
 	@ManyToOne(fetch = FetchType.EAGER)
-	@JoinColumn(name = "documento_status_id", referencedColumnName = "id_documento_status")
+	@JoinColumn(name = "documento_status_id", referencedColumnName = "id_documento_status", nullable = true)
 	private DocumentoStatus documentoStatus;
+	
+	@ManyToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "reuniao_id", referencedColumnName = "id_reuniao", nullable = true)
+	private Reuniao reuniao;
 	
 	@Transient
 	private List<Rotina> rotinas;
@@ -155,7 +159,7 @@ public class Documento {
 	}
 
 	public Boolean getEnviada() {
-		return enviada;
+		return enviada == null ? false : enviada;
 	}
 
 	public void setEnviada(Boolean enviada) {
@@ -163,7 +167,7 @@ public class Documento {
 	}
 
 	public Boolean getMensagemGeral() {
-		return mensagemGeral;
+		return mensagemGeral == null ? false : mensagemGeral;
 	}
 
 	public void setMensagemGeral(Boolean mensagemGeral) {
@@ -171,7 +175,7 @@ public class Documento {
 	}
 
 	public Boolean getMensagemSetor() {
-		return mensagemSetor;
+		return mensagemSetor == null ? false : mensagemSetor;
 	}
 
 	public void setMensagemSetor(Boolean mensagemSetor) {
@@ -224,6 +228,22 @@ public class Documento {
 
 	public void setInformacoes(List<GenericListObject> informacoes) {
 		this.informacoes = informacoes;
+	}
+
+	public DocumentoStatus getDocumentoStatus() {
+		return documentoStatus;
+	}
+
+	public void setDocumentoStatus(DocumentoStatus documentoStatus) {
+		this.documentoStatus = documentoStatus;
+	}
+
+	public Reuniao getReuniao() {
+		return reuniao;
+	}
+
+	public void setReuniao(Reuniao reuniao) {
+		this.reuniao = reuniao;
 	}
 	
 }

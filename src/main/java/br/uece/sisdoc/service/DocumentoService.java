@@ -52,14 +52,19 @@ import br.uece.sisdoc.configuration.CustomUserDetailService;
 import br.uece.sisdoc.configuration.CustomUserPrincipal;
 import br.uece.sisdoc.dto.DocumentoDTO;
 import br.uece.sisdoc.dto.GenericListObject;
+import br.uece.sisdoc.dto.ReuniaoDTO;
 import br.uece.sisdoc.model.Cargo;
+import br.uece.sisdoc.model.Colegiado;
 import br.uece.sisdoc.model.Documento;
 import br.uece.sisdoc.model.DocumentoRotina;
+import br.uece.sisdoc.model.Reuniao;
 import br.uece.sisdoc.model.Rotina;
 import br.uece.sisdoc.model.Setor;
 import br.uece.sisdoc.model.TipoDocumento;
 import br.uece.sisdoc.model.Usuario;
+import br.uece.sisdoc.model.UsuarioColegiado;
 import br.uece.sisdoc.model.UsuarioDocumento;
+import br.uece.sisdoc.model.UsuarioReuniao;
 import br.uece.sisdoc.repository.CargoRepository;
 import br.uece.sisdoc.repository.DocumentoRepository;
 import br.uece.sisdoc.repository.DocumentoRotinaRepository;
@@ -126,12 +131,39 @@ public class DocumentoService {
 	@Autowired
 	CustomUserDetailService customUserDetailService;
 	
+	@Autowired
+	UsuarioColegiadoService usuarioColegiadoService;
+	
+	@Autowired
+	ColegiadoService colegiadoService;
+	
+	@Autowired
+	ReuniaoService reuniaoService;
+	
+	@Autowired
+	UsuarioReuniaoService usuarioReuniaoService;
+	
 	@Transactional
 	public Documento create(DocumentoDTO documentoDto) {
 		
 		try {
-		
+			//Para o caso do documento ter uma reuniao envolvida a ele
+			Reuniao reuniao = null;
+			
 			Documento documento = dtoToDocumento(documentoDto);
+			
+			//Caso seja uma ATA
+			if(documentoDto.getTipoDocumentoId() == 7) {
+				reuniao = reuniaoService.save(documento.getReuniao());
+				if(reuniao == null) {
+					return null;
+				} else {
+					documento.setReuniao(reuniao);
+					if(!salvarMembrosReuniao(reuniao, documentoDto.getDestinatariosIds())) {
+						return null;
+					}
+				}
+			}
 			
 			if(documento == null) {
 				return null;
@@ -151,20 +183,24 @@ public class DocumentoService {
 			int documentosEnviados = 0;
 			if(documentoDto.getDestinatariosIds() == null || documentoDto.getDestinatariosIds().isEmpty() || documento.getMensagemGeral()) {
 				
-				if(documentoDto.getMensagemSetor()) {
-					documentosEnviados = enviarMensagemParaTodosSetores(documentoSaved);
+				//Se for uma ATA
+				if(documentoDto.getTipoDocumentoId() == 7) {
+					documentosEnviados = enviarParaTodosMembrosColegiado(documentoSaved);
 				} else {
-					documentosEnviados = enviarMensagemParaTodos(documentoSaved);
+					if(documentoDto.getMensagemSetor()) {
+						documentosEnviados = enviarMensagemParaTodosSetores(documentoSaved);
+					} else {
+						documentosEnviados = enviarMensagemParaTodos(documentoSaved);
+					}
 				}
 				
-			} else {
 				
+			} else {
 				if(documentoDto.getMensagemSetor()) {
 					documentosEnviados = enviarMensagemParaListaSetores(documentoSaved, documentoDto.getDestinatariosIds());
 				} else {
 					documentosEnviados = enviarMensagemParaListaUsuarios(documentoSaved, documentoDto.getDestinatariosIds());
 				}
-				
 			}
 			
 			if(documentosEnviados == 0) {
@@ -187,6 +223,11 @@ public class DocumentoService {
 			return null;
 		}
 		
+	}
+	
+	public boolean salvarMembrosReuniao(Reuniao reuniao, List<Long> usuariosIds) {
+		
+		return usuarioReuniaoService.saveByReuniao(reuniao, usuariosIds);
 	}
 	
 	private void salvarRotinasRequerimento(Documento documento, DocumentoDTO documentoDTO) {
@@ -819,6 +860,32 @@ public class DocumentoService {
 		return documentosEnviados;
 	}
 	
+	private int enviarParaTodosMembrosColegiado(Documento documento) {
+		List<UsuarioColegiado> usuariosColegiado = null;
+		UsuarioDocumento usuarioDocumento = null;
+		UsuarioDocumento usuarioDocumentoSalvo = null;
+		int documentosEnviados = 0;
+		
+		usuariosColegiado = usuarioColegiadoService.getUsuariosColegiadosByColegiadoId(documento.getReuniao().getColegiado().getId());
+	
+		for (UsuarioColegiado usuarioColegiado : usuariosColegiado) {
+			usuarioDocumento = new UsuarioDocumento();
+			
+			usuarioDocumento.setUsuarioDestino(usuarioColegiado.getUsuario());
+			usuarioDocumento.setDocumento(documento);
+			usuarioDocumento.setAbertaPeloUsuario(false);
+			
+			usuarioDocumentoSalvo = usuarioDocumentoRepository.save(usuarioDocumento);
+			
+			if(usuarioDocumentoSalvo != null) {
+				documentosEnviados++;
+			
+			}
+		}
+		
+		return documentosEnviados;
+	}
+	
 	private int enviarMensagemParaTodosSetores(Documento documento) {
 		
 		List<Usuario> usuariosDestino = null;
@@ -1075,25 +1142,46 @@ public class DocumentoService {
 		
 		documentoDTO.setMensagemGeral(documento.getMensagemGeral());
 		
-		if(!documento.getMensagemGeral()) {
-			if(documento.getMensagemSetor()) {
-				List<Setor> setoresDestinatarios = usuarioDocumentoRepository.getSetoresDoDoc(documento.getId());
-				
-				if(setoresDestinatarios != null && !setoresDestinatarios.isEmpty()) {
-					for(Setor setorDestino : setoresDestinatarios) {
-						
-						if(!destinatariosIds.contains(setorDestino.getId())) {
-							destinatariosIds.add(setorDestino.getId());
+		// DIFERENTE DE ATA
+		if(documento.getTipoDocumento().getId() != 7) {
+			if(documento.getMensagemGeral() == null && !documento.getMensagemGeral()) {
+				if(documento.getMensagemSetor() != null && documento.getMensagemSetor()) {
+					List<Setor> setoresDestinatarios = usuarioDocumentoRepository.getSetoresDoDoc(documento.getId());
+					
+					if(setoresDestinatarios != null && !setoresDestinatarios.isEmpty()) {
+						for(Setor setorDestino : setoresDestinatarios) {
+							
+							if(!destinatariosIds.contains(setorDestino.getId())) {
+								destinatariosIds.add(setorDestino.getId());
+							}
+							
 						}
-						
 					}
+					
+				} else {
+					destinatariosIds = usuarioDocumentoRepository.getDestinatariosDoDoc(documento.getId());
 				}
 				
-			} else {
-				destinatariosIds = usuarioDocumentoRepository.getDestinatariosDoDoc(documento.getId());
 			}
+		} else { // CASO SEJA UMA ATA
+			ReuniaoDTO reuniaoDto = new ReuniaoDTO();
+			reuniaoDto.setColegiadoId(documento.getReuniao().getColegiado().getId());
+			reuniaoDto.setId(documento.getReuniao().getId());
+			documentoDTO.setReuniao(reuniaoDto);
 			
+			if(documento.getMensagemGeral() == null && !documento.getMensagemGeral()) {
+				List<UsuarioColegiado> usuariosColegiado = usuarioColegiadoService.getUsuariosColegiadosByColegiadoId(documento.getReuniao().getColegiado().getId());
+				for(UsuarioColegiado usuarioColegiado: usuariosColegiado) {
+					destinatariosIds.add(usuarioColegiado.getUsuario().getId());
+				}
+			} else {
+				List<UsuarioReuniao> usuariosReuniao = usuarioReuniaoService.getUsuariosReuniaoByReuniaoId(documento.getReuniao().getId());
+				for(UsuarioReuniao usuarioReuniao: usuariosReuniao) {
+					destinatariosIds.add(usuarioReuniao.getUsuario().getId());
+				}
+			}
 		}
+		
 		
 		documentoDTO.setDestinatariosIds(destinatariosIds);
 		documentoDTO.setMensagemSetor(documento.getMensagemSetor());
@@ -1182,6 +1270,13 @@ public class DocumentoService {
 		documento.setAssunto(documentoDTO.getAssunto());
 		documento.setRequerido(documentoDTO.getRequerido());
 		documento.setVinculo(documentoDTO.getVinculo());
+		
+		if(documentoDTO.getReuniao() != null && documentoDTO.getReuniao().getColegiadoId() != null) {
+			Reuniao reuniao = new Reuniao();
+			Colegiado colegiado = colegiadoService.findById(documentoDTO.getReuniao().getColegiadoId());
+			reuniao.setColegiado(colegiado);
+			documento.setReuniao(reuniao);
+		}
 		
 		return documento;
 	}

@@ -294,6 +294,12 @@ public class DocumentoController {
 		return documentoService.create(documento);
 	}
 	
+	@PostMapping("/ata")
+	public Documento createAta(@RequestBody DocumentoDTO documento) {
+		
+		return documentoService.create(documento);
+	}
+	
 	@PutMapping("send/{id}")
 	public boolean send(@PathVariable Long id) {
 		return documentoService.send(id);

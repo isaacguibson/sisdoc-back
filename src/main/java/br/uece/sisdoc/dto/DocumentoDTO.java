@@ -37,6 +37,8 @@ public class DocumentoDTO {
 	private List<GenericListObject> outrasRotinas; //para requerimentos
 	
 	private List<GenericListObject> informacoes; //para requerimentos
+	
+	private ReuniaoDTO reuniao;
 
 	public Long getId() {
 		return id;
@@ -172,6 +174,14 @@ public class DocumentoDTO {
 
 	public void setOutrasRotinas(List<GenericListObject> outrasRotinas) {
 		this.outrasRotinas = outrasRotinas;
+	}
+
+	public ReuniaoDTO getReuniao() {
+		return reuniao;
+	}
+
+	public void setReuniao(ReuniaoDTO reuniao) {
+		this.reuniao = reuniao;
 	}
 	
 }
