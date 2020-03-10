@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import br.uece.sisdoc.model.Reuniao;
 import br.uece.sisdoc.model.Usuario;
+import br.uece.sisdoc.model.UsuarioColegiado;
 import br.uece.sisdoc.model.UsuarioReuniao;
 import br.uece.sisdoc.repository.UsuarioReuniaoRepository;
 import br.uece.sisdoc.specification.UsuarioReuniaoSpecification;
@@ -20,6 +21,9 @@ public class UsuarioReuniaoService {
 	
 	@Autowired
 	UsuarioService usuarioService;
+	
+	@Autowired
+	UsuarioColegiadoService usuarioColegiadoService;
 	
 	public List<UsuarioReuniao> getUsuariosReuniaoByReuniaoId(Long id) {
 		if(id == null) {
@@ -43,6 +47,51 @@ public class UsuarioReuniaoService {
 		return usuarioReuniaoRepository.findAll(Specification.where(
 				usuarioReuniaoSpec.filterByUsuario(id)));
 		
+	}
+	
+	public boolean excluirUsuariosReuniao(Reuniao reuniao) {
+		List<UsuarioReuniao> usuariosReuniao = getUsuariosReuniaoByReuniaoId(reuniao.getId());
+		
+		if(usuariosReuniao == null || usuariosReuniao.size() == 0) {
+			return false;
+		}
+		
+		int count = 0;
+		for(UsuarioReuniao usuarioReuniao : usuariosReuniao) {
+			usuarioReuniaoRepository.delete(usuarioReuniao);
+			count++;
+		}
+		
+		return count > 0;
+	}
+	
+	public boolean saveForWholeColegiado(Reuniao reuniao) {
+		
+		if(reuniao == null) {
+			return false;
+		}
+		
+		if(reuniao.getColegiado() == null || reuniao.getColegiado().getId() == null) {
+			return false;
+		}
+		
+		List<UsuarioColegiado> usuariosColegiado = usuarioColegiadoService.getUsuariosColegiadosByColegiadoId(reuniao.getColegiado().getId());
+	
+		if(usuariosColegiado == null || usuariosColegiado.size() == 0) {
+			return false;
+		}
+		
+		UsuarioReuniao usuarioReuniao = null;
+		int count = 0;
+		for(UsuarioColegiado usuarioColegiado : usuariosColegiado) {
+			usuarioReuniao = new UsuarioReuniao();
+			usuarioReuniao.setReuniao(reuniao);
+			usuarioReuniao.setUsuario(usuarioColegiado.getUsuario());
+			usuarioReuniaoRepository.save(usuarioReuniao);
+			count++;
+		}
+		
+		return count > 0;
 	}
 	
 	public boolean saveByReuniao(Reuniao reuniao, List<Long> usuariosIds) {

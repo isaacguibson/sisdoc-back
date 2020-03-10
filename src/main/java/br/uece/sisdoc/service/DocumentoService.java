@@ -159,7 +159,7 @@ public class DocumentoService {
 					return null;
 				} else {
 					documento.setReuniao(reuniao);
-					if(!salvarMembrosReuniao(reuniao, documentoDto.getDestinatariosIds())) {
+					if(!salvarMembrosReuniao(reuniao, documentoDto)) {
 						return null;
 					}
 				}
@@ -225,9 +225,13 @@ public class DocumentoService {
 		
 	}
 	
-	public boolean salvarMembrosReuniao(Reuniao reuniao, List<Long> usuariosIds) {
+	public boolean salvarMembrosReuniao(Reuniao reuniao, DocumentoDTO documentoDTO) {
 		
-		return usuarioReuniaoService.saveByReuniao(reuniao, usuariosIds);
+		if(!documentoDTO.getMensagemGeral()) {
+			return usuarioReuniaoService.saveByReuniao(reuniao, documentoDTO.getDestinatariosIds());
+		} else {
+			return usuarioReuniaoService.saveForWholeColegiado(reuniao);
+		}
 	}
 	
 	private void salvarRotinasRequerimento(Documento documento, DocumentoDTO documentoDTO) {
@@ -661,6 +665,10 @@ public class DocumentoService {
 		
 	}
 	
+	private boolean excluirMembrosReuniao(Reuniao reuniao) {
+		return usuarioReuniaoService.excluirUsuariosReuniao(reuniao);
+	}
+	
 	public Documento update(DocumentoDTO documentoDto) {
 		
 		Documento documento = dtoToDocumento(documentoDto);
@@ -680,6 +688,20 @@ public class DocumentoService {
 			documentoToUpdate.setMensagemGeral(documento.getMensagemGeral());
 			documentoToUpdate.setMensagemSetor(documento.getMensagemSetor());
 			documentoToUpdate.setAssunto(documento.getAssunto());
+			
+			// Se for um ata
+			if(documentoDto.getTipoDocumentoId() == 7) {
+				// Se o colegiado tiver sido alterado
+				if(documentoDto.getReuniao().getColegiadoId() != documentoToUpdate.getReuniao().getColegiado().getId()) {
+					Colegiado colegiado = colegiadoService.findById(documentoDto.getReuniao().getColegiadoId());
+					documentoToUpdate.getReuniao().setColegiado(colegiado);
+				}
+				excluirMembrosReuniao(documentoToUpdate.getReuniao());
+				if(!salvarMembrosReuniao(documentoToUpdate.getReuniao(), documentoDto)) {
+					return null;
+				}
+				
+			}
 			
 			documento = documentoRepository.save(documentoToUpdate);
 			
@@ -701,15 +723,19 @@ public class DocumentoService {
 				
 				excluirTodosOsEnvios(documento);
 				
-				if(documentoDto.getMensagemSetor()) {
+				if(documentoDto.getMensagemSetor()!=null && documentoDto.getMensagemSetor()) {
 					enviarMensagemParaTodosSetores(documento);
 				} else {
-					enviarMensagemParaTodos(documento);
+					if(documentoDto.getTipoDocumentoId() == 7) {
+						enviarParaTodosMembrosColegiado(documento);
+					} else {
+						enviarMensagemParaTodos(documento);
+					}
 				}
 				
 				
 				
-			} else if (documentoDto.getMensagemSetor()) {
+			} else if (documentoDto.getMensagemSetor()!=null && documentoDto.getMensagemSetor()) {
 				
 				excluirTodosOsEnvios(documento);
 				enviarMensagemParaListaSetores(documento, idsDestinatariosParaEnviar);
