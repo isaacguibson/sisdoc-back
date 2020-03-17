@@ -52,6 +52,7 @@ import br.uece.sisdoc.configuration.CustomUserDetailService;
 import br.uece.sisdoc.configuration.CustomUserPrincipal;
 import br.uece.sisdoc.dto.DocumentoDTO;
 import br.uece.sisdoc.dto.GenericListObject;
+import br.uece.sisdoc.dto.MembroColegiadoDTO;
 import br.uece.sisdoc.dto.ReuniaoDTO;
 import br.uece.sisdoc.model.Cargo;
 import br.uece.sisdoc.model.Colegiado;
@@ -86,6 +87,7 @@ import net.sf.jasperreports.engine.JasperExportManager;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
+import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 
 @Service
 public class DocumentoService {
@@ -421,44 +423,45 @@ public class DocumentoService {
 			JasperReport jasper = JasperCompileManager.compileReport(env.getProperty("REPORTS_LOCATION")+"ata.jrxml");
 			Map<String, Object> map = new HashMap<>();
 			
-			map.put("TITULO", "ATA DA REUNIÃO DO COLEGIADO DO CURSO DE CIÊNCIA DA COMPUTAÇÂO DA UNIVERSIDADE ESTADUAL DO CEARÁ. REALIZADA EM 12/09/2012.");
-			map.put("CONTEUDO", "Aos doze dias do mês de Setembro do ano de dois mil e doze, na sala A da Pós-Graduação em Computação, foi realizada às quatorze horas e quinze minutos, a reunião do Colegiado do Curso de Computação com a presença de 15 docentes e 07 discentes que formam o Aos doze dias do mês de Setembro do ano de dois mil e doze, na sala A da Pós-Graduação em Computação, foi realizada às quatorze horas e quinze minutos, a reunião do Colegiado do Curso de Computação com a presença de 15 docentes e 07 discentes que formam o");
+			map.put("TITULO", documento.getAssunto());
+			map.put("CONTEUDO", documento.getConteudo());
 			map.put("LOCAL_E_DATA", "Fortaleza, 28 de Janeiro de 2020");
 			
-//			List<MembroColegiado> membros = new ArrayList<MembroColegiado>();
-//			
-//			MembroColegiado membro1 = new MembroColegiado("Isaac Guibson", "Diretor de Marketing da Reitoria");
-//			membros.add(membro1);
-//			
-//			MembroColegiado membro2 = new MembroColegiado("Luan Marques", "Vice-Presidente de Marketing da Reitoria");
-//			membros.add(membro2);
-//			
-//			MembroColegiado membro3 = new MembroColegiado("Luan Marques", "Vice-Presidente de Marketing da Reitoria");
-//			membros.add(membro3);
-//			
-//			MembroColegiado membro4 = new MembroColegiado("Luan Marques", "Vice-Presidente de Marketing da Reitoria");
-//			membros.add(membro4);
-//			
-//			MembroColegiado membro5 = new MembroColegiado("Luan Marques", "Vice-Presidente de Marketing da Reitoria");
-//			membros.add(membro5);
-//			
-//			MembroColegiado membro6 = new MembroColegiado("Luan Marques", "Vice-Presidente de Marketing da Reitoria");
-//			membros.add(membro6);
-//			
-//			MembroColegiado membro7 = new MembroColegiado("Luan Marques", "Vice-Presidente de Marketing da Reitoria");
-//			membros.add(membro7);
-//			
-//			MembroColegiado membro8 = new MembroColegiado("Luan Marques", "Vice-Presidente de Marketing da Reitoria");
-//			membros.add(membro8);
-//			
-//			MembroColegiado membro9 = new MembroColegiado("Luan Marques", "Vice-Presidente de Marketing da Reitoria");
-//			membros.add(membro9);
-//			
-//			MembroColegiado membro10 = new MembroColegiado("Luan Marques", "Vice-Presidente de Marketing da Reitoria");
-//			membros.add(membro10);
+			List<MembroColegiadoDTO> membros = new ArrayList<MembroColegiadoDTO>();
+
+			MembroColegiadoDTO membroReuniao = null;
+			if(documento.getMensagemGeral()) {
+				List<Usuario> membrosColegiado = colegiadoService.getMembros(documento.getReuniao().getColegiado().getId());
 			
-//			JRDataSource jrds = new JRBeanCollectionDataSource(membros);
-//			map.put("LIST", jrds);
+				for(Usuario membro : membrosColegiado) {
+					membroReuniao = new MembroColegiadoDTO();
+					membroReuniao.setNome(membro.getNome());
+					List<Cargo> cargos = usuarioCargoRepository.getUserCargos(membro.getId());
+					if(cargos!=null && cargos.size()>0) {
+						membroReuniao.setCargoSetor(cargos.get(0).getNome() + " do(a) " + cargos.get(0).getSetor().getNome());
+					} else {
+						membroReuniao.setCargoSetor("");
+					}
+					membros.add(membroReuniao);
+				}
+			} else {
+				List<UsuarioReuniao> membrosReuniao = usuarioReuniaoService.getUsuariosReuniaoByReuniaoId(documento.getReuniao().getId());
+			
+				for(UsuarioReuniao membro : membrosReuniao) {
+					membroReuniao = new MembroColegiadoDTO();
+					membroReuniao.setNome(membro.getUsuario().getNome());
+					List<Cargo> cargos = usuarioCargoRepository.getUserCargos(membro.getUsuario().getId());
+					if(cargos!=null && cargos.size()>0) {
+						membroReuniao.setCargoSetor(cargos.get(0).getNome() + " do(a) " + cargos.get(0).getSetor().getNome());
+					} else {
+						membroReuniao.setCargoSetor("");
+					}
+					membros.add(membroReuniao);
+				}
+			}
+			
+			JRDataSource jrds = new JRBeanCollectionDataSource(membros);
+			map.put("LIST", jrds);
 			
 			JRDataSource jrDataSource = new JREmptyDataSource();
 			
