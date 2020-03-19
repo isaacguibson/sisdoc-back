@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +18,7 @@ import br.uece.sisdoc.model.UsuarioDocumento;
 import br.uece.sisdoc.repository.DocumentoRepository;
 import br.uece.sisdoc.repository.UsuarioDocumentoRepository;
 import br.uece.sisdoc.repository.UsuarioRepository;
+import br.uece.sisdoc.specification.UsuarioDocumentoSpecification;
 
 @Service
 public class UsuarioDocumentoService {
@@ -69,6 +71,27 @@ public class UsuarioDocumentoService {
 	public void delete(Long id) {
 		
 		usuarioDocumentoRepository.deleteById(id);
+	}
+	
+	public List<UsuarioDocumento> getUsuarioDocumentoFromDocumentoId(Long documentoId) {
+		UsuarioDocumentoSpecification userDocSpec = new UsuarioDocumentoSpecification();
+		
+		List<UsuarioDocumento> usuariosDocumento = usuarioDocumentoRepository.findAll(Specification.where(
+				userDocSpec.filterByDocumento(documentoId)
+		));
+		
+		return usuariosDocumento;
+	}
+	
+	public void deleteByDocumento(Long documentoId) {
+		
+		List<UsuarioDocumento> usuariosDocumento = getUsuarioDocumentoFromDocumentoId(documentoId);
+		
+		if(usuariosDocumento != null && usuariosDocumento.size() > 0) {
+			for (UsuarioDocumento usuDoc : usuariosDocumento) {
+				usuarioDocumentoRepository.delete(usuDoc);
+			}
+		}
 	}
 	
 	public UsuarioDocumento findById(Long id) {

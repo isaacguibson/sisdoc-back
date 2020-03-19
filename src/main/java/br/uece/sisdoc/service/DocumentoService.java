@@ -229,7 +229,7 @@ public class DocumentoService {
 	
 	public boolean salvarMembrosReuniao(Reuniao reuniao, DocumentoDTO documentoDTO) {
 		
-		if(!documentoDTO.getMensagemGeral()) {
+		if(documentoDTO.getMensagemGeral()==null || !documentoDTO.getMensagemGeral()) {
 			return usuarioReuniaoService.saveByReuniao(reuniao, documentoDTO.getDestinatariosIds());
 		} else {
 			return usuarioReuniaoService.saveForWholeColegiado(reuniao);
@@ -423,7 +423,7 @@ public class DocumentoService {
 			JasperReport jasper = JasperCompileManager.compileReport(env.getProperty("REPORTS_LOCATION")+"ata.jrxml");
 			Map<String, Object> map = new HashMap<>();
 			
-			map.put("TITULO", documento.getAssunto());
+			map.put("TITULO", documento.getAssunto().toUpperCase());
 			map.put("CONTEUDO", documento.getConteudo());
 			map.put("LOCAL_E_DATA", "Fortaleza, 28 de Janeiro de 2020");
 			
