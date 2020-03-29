@@ -21,4 +21,14 @@ public class DocumentoRotinaSpecification {
 					criteriaBuilder.equal(root.get("documento").get("id"), documento.getId());
 	}
 	
+	public Specification<DocumentoRotina> getByDocumentoId(Long documentoId) {
+		
+		if(documentoId == null) {
+			return null;
+		}
+		
+		return (root, criteriaQuery, criteriaBuilder) ->
+					criteriaBuilder.equal(root.get("documento").get("id"), documentoId);
+	}
+	
 }

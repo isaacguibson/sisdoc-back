@@ -83,15 +83,21 @@ public class UsuarioDocumentoService {
 		return usuariosDocumento;
 	}
 	
-	public void deleteByDocumento(Long documentoId) {
+	public boolean deleteByDocumento(Long documentoId) {
 		
+		int count = 0;
+		 
 		List<UsuarioDocumento> usuariosDocumento = getUsuarioDocumentoFromDocumentoId(documentoId);
-		
+		int total = 0;
 		if(usuariosDocumento != null && usuariosDocumento.size() > 0) {
+			total = usuariosDocumento.size();
 			for (UsuarioDocumento usuDoc : usuariosDocumento) {
 				usuarioDocumentoRepository.delete(usuDoc);
+				count++;
 			}
 		}
+		
+		return total != 0 && count == total;
 	}
 	
 	public UsuarioDocumento findById(Long id) {

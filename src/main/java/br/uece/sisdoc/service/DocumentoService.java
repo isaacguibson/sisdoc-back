@@ -93,6 +93,8 @@ import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 public class DocumentoService {
 	
 	private final static int INIT_TEXT = 30;
+	public static final Long REQUERIMENTO = 4L;
+	public static final Long ATA = 7L;
 	// private final static String REPORTS_LOCATION = "C:\\Users\\Isaac\\documentos\\reports\\";
 	// private final static String EXPORTED_REPORT_LOCATION = "C:\\Users\\Isaac\\documentos\\exported_reports\\";
 	// private final static String HTML_LOCATION = "C:\\Users\\Isaac\\documentos\\htmls\\";
@@ -144,6 +146,9 @@ public class DocumentoService {
 	
 	@Autowired
 	UsuarioReuniaoService usuarioReuniaoService;
+	
+	@Autowired
+	DocumentoRotinaService documentoRotinaService;
 	
 	@Transactional
 	public Documento create(DocumentoDTO documentoDto) {
@@ -425,7 +430,9 @@ public class DocumentoService {
 			
 			map.put("TITULO", documento.getAssunto().toUpperCase());
 			map.put("CONTEUDO", documento.getConteudo());
-			map.put("LOCAL_E_DATA", "Fortaleza, 28 de Janeiro de 2020");
+			Calendar calendar = Calendar.getInstance();
+			calendar.setTime(documento.getDataCriacao());
+			map.put("LOCAL_E_DATA", "Fortaleza, "+calendar.get(Calendar.DAY_OF_MONTH)+" de "+ getMes(calendar) + " de " + calendar.get(Calendar.YEAR));
 			
 			List<MembroColegiadoDTO> membros = new ArrayList<MembroColegiadoDTO>();
 
@@ -814,7 +821,18 @@ public class DocumentoService {
 		}
 		
 		excluirTodosOsEnvios(documento);
+		Long reuniaoId = null;
+		if(documento.getTipoDocumento().getId() == REQUERIMENTO) {
+			documentoRotinaService.deletByDocumentoId(documento.getId());
+		} else if(documento.getTipoDocumento().getId() == ATA) {
+			usuarioReuniaoService.excluirUsuariosReuniao(documento.getReuniao());
+			reuniaoId = documento.getReuniao().getId();
+		}
 		documentoRepository.deleteById(id);
+		
+		if(reuniaoId != null) {
+			reuniaoService.delete(reuniaoId);
+		}
 		
 		return true;
 		
@@ -1366,7 +1384,7 @@ public class DocumentoService {
 			
 			Calendar calendar = Calendar.getInstance();
 			
-			Paragraph localData = new Paragraph("Fortaleza "+ calendar.get(Calendar.DAY_OF_MONTH) + " de " + getDia(calendar) + " de " + calendar.get(Calendar.YEAR));
+			Paragraph localData = new Paragraph("Fortaleza "+ calendar.get(Calendar.DAY_OF_MONTH) + " de " + getMes(calendar) + " de " + calendar.get(Calendar.YEAR));
 			
 			ColumnText.showTextAligned(writer.getDirectContent(), Element.ALIGN_RIGHT, localData, 560, 680, 0);
 			
@@ -1603,7 +1621,7 @@ public class DocumentoService {
     		
     		Calendar calendar = Calendar.getInstance();
     		calendar.setTime(documento.getDataCriacao());
-    		Paragraph paragrafoFinal = new Paragraph("Fortaleza, "+ calendar.get(Calendar.DAY_OF_MONTH) + " de " + getDia(calendar) + " de " + calendar.get(Calendar.YEAR) + ".");
+    		Paragraph paragrafoFinal = new Paragraph("Fortaleza, "+ calendar.get(Calendar.DAY_OF_MONTH) + " de " + getMes(calendar) + " de " + calendar.get(Calendar.YEAR) + ".");
     		document.add(paragrafoFinal);
     		
     		document.add(new Phrase("\n"));
@@ -1804,7 +1822,7 @@ public class DocumentoService {
 			paragrafoFinal.add(funece);
 			Calendar calendar = Calendar.getInstance();
 			Phrase localEData = new Phrase();
-			localEData.add(", em Fortaleza, "+ calendar.get(Calendar.DAY_OF_MONTH) + " de " + getDia(calendar) + " de " + calendar.get(Calendar.YEAR));
+			localEData.add(", em Fortaleza, "+ calendar.get(Calendar.DAY_OF_MONTH) + " de " + getMes(calendar) + " de " + calendar.get(Calendar.YEAR));
 			paragrafoFinal.add(localEData);
 			document.add(paragrafoFinal);
 			
@@ -1880,7 +1898,7 @@ public class DocumentoService {
 		
 	}
 	
-	public String getDia(Calendar calendar){
+	public String getMes(Calendar calendar){
 		switch (calendar.get(Calendar.MONTH)) {
 		case 0:
 			return "Janeiro";
