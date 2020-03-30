@@ -112,6 +112,43 @@ public class ColegiadoService {
 		return colegiado;
 	}
 	
+	public Colegiado update(ColegiadoDTO colegiadoDTO) {
+		
+		if(colegiadoDTO == null) {
+			return null;
+		}
+		
+		if(colegiadoDTO.getId() == null) {
+			return null;
+		}
+		
+		Colegiado colegiado = dtoToColegiado(colegiadoDTO);
+		colegiado = colegiadoRepository.save(colegiado);
+		
+		usuarioColegiadoService.removerUsuariosColegiados(colegiado);
+		usuarioColegiadoService.salvarUsuariosColegiados(colegiado, colegiadoDTO.getMembrosIds());
+		
+		return colegiado;
+	}
+	
+	public void delete(Long id) {
+		
+		if(id == null) {
+			return;
+		}
+		
+		Optional<Colegiado> optColegiado = colegiadoRepository.findById(id);
+		Colegiado colegiado = null;
+		if(optColegiado.isPresent()) {
+			colegiado = optColegiado.get();
+		} else {
+			return;
+		}
+		
+		usuarioColegiadoService.removerUsuariosColegiados(colegiado);
+		colegiadoRepository.delete(colegiado);
+	}
+	
 	public void salvarUsuariosColegiado(Colegiado colegiado, List<Long> membrosIds) {
 		usuarioColegiadoService.salvarUsuariosColegiados(colegiado, membrosIds);
 	}

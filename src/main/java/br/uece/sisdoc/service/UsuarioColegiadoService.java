@@ -53,6 +53,16 @@ public class UsuarioColegiadoService {
 		
 	}
 	
+	public void removerUsuariosColegiados(Colegiado colegiado) {
+		
+		List<UsuarioColegiado> usuariosColegiados = getUsuariosColegiadosByColegiadoId(colegiado.getId());
+		
+		for (UsuarioColegiado usuarioColegiado : usuariosColegiados) {
+			usuarioColegiadoRepository.delete(usuarioColegiado);
+		}
+		
+	}
+	
 	public List<UsuarioColegiado> getUsuariosColegiadosByUsuarioId(Long id) {
 		if(id == null) {
 			return null;
