@@ -1191,7 +1191,7 @@ public class DocumentoService {
 		
 		// DIFERENTE DE ATA
 		if(documento.getTipoDocumento().getId() != 7) {
-			if(documento.getMensagemGeral() == null && !documento.getMensagemGeral()) {
+			if(documento.getMensagemGeral() == null || !documento.getMensagemGeral()) {
 				if(documento.getMensagemSetor() != null && documento.getMensagemSetor()) {
 					List<Setor> setoresDestinatarios = usuarioDocumentoRepository.getSetoresDoDoc(documento.getId());
 					
