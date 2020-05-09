@@ -203,7 +203,7 @@ public class DocumentoService {
 				
 				
 			} else {
-				if(documentoDto.getMensagemSetor()) {
+				if(documentoDto.getMensagemSetor() != null && documentoDto.getMensagemSetor()) {
 					documentosEnviados = enviarMensagemParaListaSetores(documentoSaved, documentoDto.getDestinatariosIds());
 				} else {
 					documentosEnviados = enviarMensagemParaListaUsuarios(documentoSaved, documentoDto.getDestinatariosIds());
