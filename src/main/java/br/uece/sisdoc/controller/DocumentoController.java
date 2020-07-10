@@ -68,6 +68,39 @@ public class DocumentoController {
 		
 		return documentoService.findFullDocById(id);
 	}
+
+	@GetMapping("/word/{id}")
+	public ResponseEntity<byte[]> createWordFile(@PathVariable Long id, @RequestParam Long cargoId, @RequestParam Long tipoDocumento) {
+		if(cargoId == null) {
+			return null;
+		}
+		
+		try {
+			String path = documentoService.generateOficio(id, cargoId);
+			
+			File file = new File(path);
+			
+			documentoService.pdfToDoc(file);
+			
+			byte[] contents = Files.readAllBytes(file.toPath());
+			
+			HttpHeaders headers = new HttpHeaders();
+			
+			headers.setContentType(MediaType.parseMediaType("application/pdf"));
+			
+			headers.setContentDispositionFormData("document.pdf", "document.pdf");
+			
+			headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
+			
+			ResponseEntity<byte[]> response = new ResponseEntity<>(contents, headers, HttpStatus.OK);
+			
+			return response;
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
 	
 	
 	@GetMapping("/oficio/{id}")
@@ -81,6 +114,7 @@ public class DocumentoController {
 			String path = documentoService.generateOficio(id, cargoId);
 			
 			File file = new File(path);
+			documentoService.pdfToDoc(file);
 			
 			byte[] contents = Files.readAllBytes(file.toPath());
 			

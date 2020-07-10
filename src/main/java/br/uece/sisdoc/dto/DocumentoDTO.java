@@ -16,6 +16,8 @@ public class DocumentoDTO {
 	
 	private String conteudo;
 	
+	private String dataCriacao;
+	
 	private String dataInicial;
 	
 	private String dataFinal;
@@ -182,6 +184,14 @@ public class DocumentoDTO {
 
 	public void setReuniao(ReuniaoDTO reuniao) {
 		this.reuniao = reuniao;
+	}
+
+	public String getDataCriacao() {
+		return dataCriacao;
+	}
+
+	public void setDataCriacao(String dataCriacao) {
+		this.dataCriacao = dataCriacao;
 	}
 	
 }

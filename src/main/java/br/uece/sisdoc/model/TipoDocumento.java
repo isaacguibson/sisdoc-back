@@ -2,9 +2,13 @@ package br.uece.sisdoc.model;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
@@ -20,6 +24,10 @@ public class TipoDocumento {
 	
 	@Column(name = "nome", nullable = false)
 	private String nome;
+	
+	@OneToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "permissao_id", referencedColumnName = "id_permissao", nullable = false)
+	private Permissao permissao;
 
 	
 	//Getters e Setters
@@ -38,6 +46,12 @@ public class TipoDocumento {
 	public void setNome(String nome) {
 		this.nome = nome;
 	}
-	
-	
+
+	public Permissao getPermissao() {
+		return permissao;
+	}
+
+	public void setPermissao(Permissao permissao) {
+		this.permissao = permissao;
+	}
 }

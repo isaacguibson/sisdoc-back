@@ -12,18 +12,18 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
 @Entity
-@Table(name="USUARIO_PERMISSAO")
-public class UsuarioPermissao {
+@Table(name="CARGO_PERMISSAO")
+public class CargoPermissao {
 
 	@Id
-	@SequenceGenerator(sequenceName = "SEQ_USUARIO_PERMISSAO", name = "SEQ_USUARIO_PERMISSAO", allocationSize = 1)
-	@GeneratedValue(generator="SEQ_USUARIO_PERMISSAO", strategy = GenerationType.SEQUENCE)
-	@Column(name = "id_usuario_permissao", nullable = false)
+	@SequenceGenerator(sequenceName = "SEQ_CARGO_PERMISSAO", name = "SEQ_CARGO_PERMISSAO", allocationSize = 1)
+	@GeneratedValue(generator="SEQ_CARGO_PERMISSAO", strategy = GenerationType.SEQUENCE)
+	@Column(name = "id_cargo_permissao", nullable = false)
 	private Long id;
 
 	@ManyToOne(fetch = FetchType.EAGER)
-	@JoinColumn(name = "usuario_id", referencedColumnName = "id_usuario", nullable = false)
-	private Usuario usuario;
+	@JoinColumn(name = "cargo_id", referencedColumnName = "id_cargo", nullable = false)
+	private Cargo cargo;
 	
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "permissao_id", referencedColumnName = "id_permissao", nullable = false)
@@ -37,12 +37,12 @@ public class UsuarioPermissao {
 		this.id = id;
 	}
 
-	public Usuario getUsuario() {
-		return usuario;
+	public Cargo getCargo() {
+		return cargo;
 	}
 
-	public void setUsuario(Usuario usuario) {
-		this.usuario = usuario;
+	public void setCargo(Cargo cargo) {
+		this.cargo = cargo;
 	}
 
 	public Permissao getPermissao() {

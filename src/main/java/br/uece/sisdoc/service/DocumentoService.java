@@ -5,6 +5,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
+import java.io.IOException;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -16,6 +18,10 @@ import java.util.Optional;
 
 import javax.transaction.Transactional;
 
+import org.apache.poi.xwpf.usermodel.BreakType;
+import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.apache.poi.xwpf.usermodel.XWPFParagraph;
+import org.apache.poi.xwpf.usermodel.XWPFRun;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Page;
@@ -26,6 +32,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
+import com.aspose.pdf.SaveFormat;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.Element;
 import com.itextpdf.text.Font;
@@ -37,6 +44,9 @@ import com.itextpdf.text.pdf.ColumnText;
 import com.itextpdf.text.pdf.PdfContentByte;
 import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfWriter;
+import com.itextpdf.text.pdf.parser.PdfReaderContentParser;
+import com.itextpdf.text.pdf.parser.SimpleTextExtractionStrategy;
+import com.itextpdf.text.pdf.parser.TextExtractionStrategy;
 import com.itextpdf.tool.xml.XMLWorker;
 import com.itextpdf.tool.xml.XMLWorkerHelper;
 import com.itextpdf.tool.xml.html.Tags;
@@ -47,6 +57,7 @@ import com.itextpdf.tool.xml.pipeline.end.PdfWriterPipeline;
 import com.itextpdf.tool.xml.pipeline.html.HtmlPipeline;
 import com.itextpdf.tool.xml.pipeline.html.HtmlPipelineContext;
 import com.itextpdf.text.pdf.PdfPTable;
+import com.itextpdf.text.pdf.PdfReader;
 
 import br.uece.sisdoc.configuration.CustomUserDetailService;
 import br.uece.sisdoc.configuration.CustomUserPrincipal;
@@ -194,7 +205,7 @@ public class DocumentoService {
 				if(documentoDto.getTipoDocumentoId() == 7) {
 					documentosEnviados = enviarParaTodosMembrosColegiado(documentoSaved);
 				} else {
-					if(documentoDto.getMensagemSetor()) {
+					if(documentoDto.getMensagemSetor() != null && documentoDto.getMensagemSetor()) {
 						documentosEnviados = enviarMensagemParaTodosSetores(documentoSaved);
 					} else {
 						documentosEnviados = enviarMensagemParaTodos(documentoSaved);
@@ -698,6 +709,13 @@ public class DocumentoService {
 			documentoToUpdate.setMensagemGeral(documento.getMensagemGeral());
 			documentoToUpdate.setMensagemSetor(documento.getMensagemSetor());
 			documentoToUpdate.setAssunto(documento.getAssunto());
+			documentoToUpdate.setDataCriacao(documento.getDataCriacao());
+			documentoToUpdate.setIdentificador(documento.getIdentificador());
+			
+			if(documentoDto.getTipoDocumentoId() == 4) {
+				documentoToUpdate.setRequerido(documento.getRequerido());
+				documentoToUpdate.setVinculo(documento.getVinculo());
+			}
 			
 			// Se for um ata
 			if(documentoDto.getTipoDocumentoId() == 7) {
@@ -1177,6 +1195,22 @@ public class DocumentoService {
 		}
 	}
 	
+	private String formatDate(Date dataParaFormatar) {
+		if(dataParaFormatar != null) {
+			Calendar documentDateCalendar = Calendar.getInstance();
+			documentDateCalendar.setTime(dataParaFormatar);
+			Integer ano = documentDateCalendar.get(Calendar.YEAR);
+			Integer mes = documentDateCalendar.get(Calendar.MONTH) + 1;
+			Integer dia = documentDateCalendar.get(Calendar.DAY_OF_MONTH);
+			String mesFormatado = mes > 9 ? ""+mes : "0"+mes;
+			String diaFormatado = dia > 9 ? ""+dia : "0"+dia;
+			
+			return  ano+"-"+mesFormatado+"-"+diaFormatado;
+		}
+		
+		return null;
+	}
+	
 	private DocumentoDTO documentoToDTO(Documento documento) {
 		DocumentoDTO documentoDTO = new DocumentoDTO();
 		
@@ -1184,6 +1218,8 @@ public class DocumentoService {
 		documentoDTO.setConteudo(documento.getConteudo());
 		documentoDTO.setId(documento.getId());
 		documentoDTO.setTipoDocumentoId(documento.getTipoDocumento().getId());
+		
+		documentoDTO.setDataCriacao(formatDate(documento.getDataCriacao()));
 		
 		List<Long> destinatariosIds = new ArrayList<Long>();
 		
@@ -1297,7 +1333,6 @@ public class DocumentoService {
 		}
 		
 		documento.setCodigo(generateCodDocumento(documento.getTipoDocumento().getId())); //Nao esta no banco ainda
-		documento.setIdentificador(documento.getCodigo()+"/"+calendar.get(Calendar.YEAR));
 		
 		// Apenas para documentos com conteudo
 		if(documentoDTO.getConteudo() != null && !documentoDTO.equals("")) {
@@ -1310,7 +1345,22 @@ public class DocumentoService {
 		}
 		
 		documento.setConteudo(documentoDTO.getConteudo());
-		documento.setDataCriacao(calendar.getTime());
+		
+		if(documentoDTO.getDataCriacao() == null) {
+			documento.setDataCriacao(calendar.getTime());
+			documento.setIdentificador(documento.getCodigo()+"/"+calendar.get(Calendar.YEAR));
+		} else {
+			try {
+				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+				Date dataCriacao = sdf.parse(documentoDTO.getDataCriacao());
+				documento.setDataCriacao(dataCriacao);
+				calendar.setTime(dataCriacao);
+				documento.setIdentificador(documento.getCodigo()+"/"+calendar.get(Calendar.YEAR));
+			} catch (ParseException e) {
+				documento.setDataCriacao(calendar.getTime());
+				documento.setIdentificador(documento.getCodigo()+"/"+calendar.get(Calendar.YEAR));
+			}
+		}
 		
 		documento.setMensagemGeral(documentoDTO.getMensagemGeral());
 		documento.setMensagemSetor(documentoDTO.getMensagemSetor());
@@ -1383,6 +1433,7 @@ public class DocumentoService {
 			ColumnText.showTextAligned(writer.getDirectContent(), Element.ALIGN_LEFT, identificador, INIT_TEXT, 700, 0);
 			
 			Calendar calendar = Calendar.getInstance();
+			calendar.setTime(documento.getDataCriacao());
 			
 			Paragraph localData = new Paragraph("Fortaleza "+ calendar.get(Calendar.DAY_OF_MONTH) + " de " + getMes(calendar) + " de " + calendar.get(Calendar.YEAR));
 			
@@ -1392,27 +1443,29 @@ public class DocumentoService {
 			ColumnText.showTextAligned(writer.getDirectContent(), Element.ALIGN_LEFT, deQuem, INIT_TEXT, 660, 0);
 			
 			if(isMensagemGeral) {
-				Paragraph saudacoes = new Paragraph("Prezados,");
-				ColumnText.showTextAligned(writer.getDirectContent(), Element.ALIGN_LEFT, saudacoes, INIT_TEXT, 0, 0);
+				//TODO realizar alteracoes para mensagem geral
+				//Paragraph saudacoes = new Paragraph("Prezados,");
+				//ColumnText.showTextAligned(writer.getDirectContent(), Element.ALIGN_LEFT, saudacoes, INIT_TEXT, 0, 0);
 			} else if (isMensagemSetor) {
-				if(!destinatariosIds.isEmpty()) {
-					if(destinatariosIds.size() > 1) {
-						Paragraph saudacoes = new Paragraph("Prezados,");
-						ColumnText.showTextAligned(writer.getDirectContent(), Element.ALIGN_LEFT, saudacoes, INIT_TEXT, 0, 0);
-					} else {
-						
-						Paragraph saudacoes = new Paragraph("Prezado(a),");
-						ColumnText.showTextAligned(writer.getDirectContent(), Element.ALIGN_LEFT, saudacoes, INIT_TEXT, 0, 0);
-					}
-				}
+				//TODO realizar alteracoes para mensagem setor
+//				if(!destinatariosIds.isEmpty()) {
+//					if(destinatariosIds.size() > 1) {
+//						Paragraph saudacoes = new Paragraph("Prezados,");
+//						ColumnText.showTextAligned(writer.getDirectContent(), Element.ALIGN_LEFT, saudacoes, INIT_TEXT, 0, 0);
+//					} else {
+//						
+//						Paragraph saudacoes = new Paragraph("Prezado(a),");
+//						ColumnText.showTextAligned(writer.getDirectContent(), Element.ALIGN_LEFT, saudacoes, INIT_TEXT, 0, 0);
+//					}
+//				}
 			} else {
 				if(!destinatariosIds.isEmpty()) {
 					if(destinatariosIds.size() > 1) {
 						
 					} else {
 						
-						Paragraph saudacoes = new Paragraph("Prezado(a),");
-						ColumnText.showTextAligned(writer.getDirectContent(), Element.ALIGN_LEFT, saudacoes, INIT_TEXT, 600, 0);
+						//Paragraph saudacoes = new Paragraph("Prezado(a),");
+						//ColumnText.showTextAligned(writer.getDirectContent(), Element.ALIGN_LEFT, saudacoes, INIT_TEXT, 600, 0);
 						
 						Optional<Usuario> optUsuarioDestino = usuarioRepository.findById(destinatariosIds.get(0));
 						
@@ -1821,6 +1874,7 @@ public class DocumentoService {
 			funece.add("FUNDAÇÃO UNIVERSIDADE ESTADUAL DO CEARÁ - FUNECE");
 			paragrafoFinal.add(funece);
 			Calendar calendar = Calendar.getInstance();
+			calendar.setTime(documento.getDataCriacao());
 			Phrase localEData = new Phrase();
 			localEData.add(", em Fortaleza, "+ calendar.get(Calendar.DAY_OF_MONTH) + " de " + getMes(calendar) + " de " + calendar.get(Calendar.YEAR));
 			paragrafoFinal.add(localEData);
@@ -1972,4 +2026,25 @@ public class DocumentoService {
 		}
 	}
 	
+	public void pdfToDoc(File pdfFile) {
+		try {
+			File docFile = new File(env.getProperty("SISDOC_FILES")+File.pathSeparator+"out.doc");
+			if(docFile.exists()) {
+				if(docFile.delete()) {
+					if(!docFile.createNewFile()) {
+						return;
+					}
+				}
+			} else {
+				if(!docFile.createNewFile()) {
+					return;
+				}
+			}
+			com.aspose.pdf.Document doc = new com.aspose.pdf.Document(pdfFile.getAbsolutePath());
+			doc.save(docFile.getAbsolutePath(), SaveFormat.Doc);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 }
