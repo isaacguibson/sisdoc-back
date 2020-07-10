@@ -70,25 +70,56 @@ public class DocumentoController {
 	}
 
 	@GetMapping("/word/{id}")
-	public ResponseEntity<byte[]> createWordFile(@PathVariable Long id, @RequestParam Long cargoId, @RequestParam Long tipoDocumento) {
+	public ResponseEntity<byte[]> createWordFile(@PathVariable Long id, @RequestParam Long cargoId, @RequestParam Integer tipoDocumento) {
 		if(cargoId == null) {
 			return null;
 		}
 		
 		try {
-			String path = documentoService.generateOficio(id, cargoId);
+			String path = null;
+			
+			switch (tipoDocumento) {
+				case 1:
+					path = documentoService.generateOficio(id, cargoId);
+					break;
+				case 3:
+					path = documentoService.generatePortaria(id, cargoId);
+					break;
+				case 4:
+					path = documentoService.generateRequerimento(id, cargoId);
+					break;
+				case 5:
+					path = documentoService.generateDespacho(id, cargoId);
+					break;
+				case 6:
+					path = documentoService.generateDeclaracao(id, cargoId);
+					break;
+				case 7:
+					path = documentoService.generateAta(id, cargoId);
+					break;
+			}
+			
+			if(path==null) {
+				return null;
+			}
 			
 			File file = new File(path);
 			
-			documentoService.pdfToDoc(file);
+			String docPath = documentoService.pdfToDoc(file);
 			
-			byte[] contents = Files.readAllBytes(file.toPath());
+			if(docPath==null) {
+				return null;
+			}
+			
+			File docFile = new File(docPath);
+			
+			byte[] contents = Files.readAllBytes(docFile.toPath());
 			
 			HttpHeaders headers = new HttpHeaders();
 			
-			headers.setContentType(MediaType.parseMediaType("application/pdf"));
+			headers.setContentType(MediaType.parseMediaType("application/msword"));
 			
-			headers.setContentDispositionFormData("document.pdf", "document.pdf");
+			headers.setContentDispositionFormData("document.doc", "document.doc");
 			
 			headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
 			
@@ -114,7 +145,6 @@ public class DocumentoController {
 			String path = documentoService.generateOficio(id, cargoId);
 			
 			File file = new File(path);
-			documentoService.pdfToDoc(file);
 			
 			byte[] contents = Files.readAllBytes(file.toPath());
 			

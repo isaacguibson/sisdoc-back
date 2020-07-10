@@ -2026,25 +2026,29 @@ public class DocumentoService {
 		}
 	}
 	
-	public void pdfToDoc(File pdfFile) {
+	public String pdfToDoc(File pdfFile) {
 		try {
-			File docFile = new File(env.getProperty("SISDOC_FILES")+File.pathSeparator+"out.doc");
+			File docFile = new File(env.getProperty("SISDOC_FILES")+File.separator+"out.doc");
 			if(docFile.exists()) {
 				if(docFile.delete()) {
 					if(!docFile.createNewFile()) {
-						return;
+						return null;
 					}
 				}
 			} else {
 				if(!docFile.createNewFile()) {
-					return;
+					return null;
 				}
 			}
 			com.aspose.pdf.Document doc = new com.aspose.pdf.Document(pdfFile.getAbsolutePath());
 			doc.save(docFile.getAbsolutePath(), SaveFormat.Doc);
+			
+			return docFile.getAbsolutePath();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+		return null;
 	}
 }
