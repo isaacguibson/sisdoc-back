@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import br.uece.sisdoc.model.Cargo;
 import br.uece.sisdoc.model.Usuario;
+import br.uece.sisdoc.repository.CargoPermissaoRepository;
 import br.uece.sisdoc.repository.UsuarioCargoRepository;
 import br.uece.sisdoc.service.UsuarioService;
 
