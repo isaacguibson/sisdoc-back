@@ -1,5 +1,6 @@
 package br.uece.sisdoc.service;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,6 +62,14 @@ public class CargoService {
 			return null;
 		}
 		
+	}
+	
+	public List<Cargo> findBySetor(Long setorId) {
+		CargoSpecification cargoSpecification = new CargoSpecification();
+		
+		return cargoRepository.findAll(Specification.where(
+				cargoSpecification.filterBySetor(setorId)
+		));
 	}
 	
 	public Page<Cargo> findAll(Pageable pageable, CargoDTO cargoDto) {
