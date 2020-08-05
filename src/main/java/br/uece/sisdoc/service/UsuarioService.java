@@ -7,17 +7,21 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import br.uece.sisdoc.dto.UsuarioDTO;
 import br.uece.sisdoc.dto.UsuarioForListDTO;
 import br.uece.sisdoc.model.Cargo;
+import br.uece.sisdoc.model.Setor;
 import br.uece.sisdoc.model.Usuario;
+import br.uece.sisdoc.model.UsuarioCargo;
 import br.uece.sisdoc.repository.CargoRepository;
 import br.uece.sisdoc.repository.SetorRepository;
 import br.uece.sisdoc.repository.UsuarioCargoRepository;
 import br.uece.sisdoc.repository.UsuarioRepository;
+import br.uece.sisdoc.specification.UsuarioSpecification;
 
 @Service
 public class UsuarioService {
@@ -40,8 +44,28 @@ public class UsuarioService {
 	public Usuario create(UsuarioDTO usuarioDTO) {
 		
 		Usuario usuario = dtoToUsuario(usuarioDTO);
+		Cargo cargo = null;
 		
-		return usuarioRepository.save(usuario);
+		Optional<Cargo> optionalCargo = cargoRepository.findById(usuarioDTO.getCargoId());
+		if(optionalCargo.isPresent()) {
+			cargo = optionalCargo.get();
+		}
+		
+		if(cargo == null) {
+			return null;
+		}
+		
+		Usuario usuarioCriado = usuarioRepository.save(usuario);
+		
+		if(usuarioCriado != null) {
+			UsuarioCargo usuarioCargo = new UsuarioCargo();
+			usuarioCargo.setUsuario(usuarioCriado);
+			usuarioCargo.setCargo(cargo);
+			
+			usuarioCargoRepository.save(usuarioCargo);
+		}
+		
+		return usuarioCriado;
 	}
 	
 	public Usuario update(UsuarioDTO usuarioDTO) {
@@ -96,7 +120,12 @@ public class UsuarioService {
 
 	public Page<Usuario> findAll(Pageable pageable, UsuarioDTO usuarioDTO) {
 		
-		return usuarioRepository.findAll(pageable);
+		UsuarioSpecification usuarioSpecificarion = new UsuarioSpecification();
+		
+		return usuarioRepository.findAll(Specification.where(
+				usuarioSpecificarion.filterByName(usuarioDTO.getNome())
+			).and(usuarioSpecificarion.filterByEmail(usuarioDTO.getEmail())),
+			pageable);
 	}
 	
 	public List<UsuarioForListDTO> findAllForList() {
@@ -121,17 +150,6 @@ public class UsuarioService {
 	
 	private Usuario dtoToUsuario(UsuarioDTO usuarioDTO) {
 		Usuario usuario = new Usuario();
-		
-		//TODO REFAZER ISSO - ESTRUTURA DE CARGOS E USUARIO FOI ALTERADA
-//		Optional<Setor> optionalSetor = setorRepository.findById(usuarioDTO.getSetorId());
-//		if(optionalSetor.isPresent()) {
-//			usuario.setSetor(optionalSetor.get());
-//		}
-//		
-//		Optional<Cargo> optionalCargo = cargoRepository.findById(usuarioDTO.getCargoId());
-//		if(optionalCargo.isPresent()) {
-//			usuario.setCargo(optionalCargo.get());
-//		}
 		
 		usuario.setNome(usuarioDTO.getNome());
 		usuario.setEmail(usuarioDTO.getEmail());
