@@ -161,6 +161,9 @@ public class DocumentoService {
 	@Autowired
 	DocumentoRotinaService documentoRotinaService;
 	
+	@Autowired
+	UsuarioDocumentoService usuarioDocumentoService;
+	
 	@Transactional
 	public Documento create(DocumentoDTO documentoDto) {
 		
@@ -2050,5 +2053,44 @@ public class DocumentoService {
 		}
 		
 		return null;
+	}
+	
+	public boolean deletarDocumentosUsuario(Usuario usuario) {
+		if(usuario == null ) {
+			return false;
+		}
+		
+		if(usuario.getId() == null) {
+			return false;
+		}
+		
+		List<Documento> documentos = new ArrayList<Documento>();
+		
+		documentos = obterDocumentosUsuario(usuario);
+		for (Documento documento : documentos) {
+			usuarioDocumentoService.deleteByDocumento(documento.getId());
+			documentoRepository.delete(documento);
+		}
+		
+		return true;
+	}
+	
+	public List<Documento> obterDocumentosUsuario(Usuario usuario) {
+		List<Documento> documentos = new ArrayList<Documento>();
+		
+		if(usuario == null ) {
+			return documentos;
+		}
+		
+		if(usuario.getId() == null) {
+			return documentos;
+		}
+		
+		DocumentoSpecification docSpecification = new DocumentoSpecification();
+		documentos = documentoRepository.findAll(Specification.where(
+				docSpecification.filterByUserId(usuario.getId())
+		));
+		
+		return documentos;
 	}
 }

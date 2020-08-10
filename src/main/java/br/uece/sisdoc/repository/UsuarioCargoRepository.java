@@ -16,5 +16,11 @@ public interface UsuarioCargoRepository extends JpaRepository<UsuarioCargo, Long
 	
 	@Query(value = "SELECT usuarioCargo.cargo FROM UsuarioCargo usuarioCargo WHERE usuarioCargo.usuario.id = :usuarioId")
 	public List<Cargo> getUserCargos(@Param("usuarioId") Long usuarioId);
+	
+	@Query(value = "SELECT usuarioCargo FROM UsuarioCargo usuarioCargo WHERE usuarioCargo.usuario.id = :usuarioId")
+	public List<UsuarioCargo> obterUsuarioCargosPeloUsuario(@Param("usuarioId") Long usuarioId);
+	
+	@Query(value = "DELETE FROM UsuarioCargo usuarioCargo WHERE usuarioCargo.usuario.id = :usuarioId")
+	public void deletarUsuarioCargoPeloUsuario(@Param("usuarioId") Long usuarioId);
 
 }

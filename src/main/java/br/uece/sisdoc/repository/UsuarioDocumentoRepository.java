@@ -42,4 +42,6 @@ public interface UsuarioDocumentoRepository extends JpaRepository<UsuarioDocumen
 	@Query(value = "DELETE FROM UsuarioDocumento usuarioDocumento WHERE usuarioDocumento.documento.id = :documentoId")
 	public void deleteDocumentosEnviadosByDoc(@Param("documentoId") Long documentoId);
 	
+	@Query(value = "DELETE FROM UsuarioDocumento usuarioDocumento WHERE usuarioDocumento.usuarioDestino.id = :usuarioId")
+	public void deleteDocumentosEnviadosByUsuario(@Param("usuarioId") Long usuarioId);
 }

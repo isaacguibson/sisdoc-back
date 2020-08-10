@@ -15,7 +15,7 @@ public class UsuarioDocumentoSpecification {
 	public Specification<UsuarioDocumento> filterByUsuario(Long id){
 		
 		return id == null ? null : (root, criteriaQuery, criteriaBuilder) ->
-					criteriaBuilder.equal(root.get("usuario").get("id"), id);
+					criteriaBuilder.equal(root.get("usuarioDestino").get("id"), id);
 		
 	}
 	

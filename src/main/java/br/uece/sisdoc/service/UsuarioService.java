@@ -17,10 +17,14 @@ import br.uece.sisdoc.model.Cargo;
 import br.uece.sisdoc.model.Setor;
 import br.uece.sisdoc.model.Usuario;
 import br.uece.sisdoc.model.UsuarioCargo;
+import br.uece.sisdoc.model.UsuarioColegiado;
+import br.uece.sisdoc.model.UsuarioReuniao;
 import br.uece.sisdoc.repository.CargoRepository;
 import br.uece.sisdoc.repository.SetorRepository;
 import br.uece.sisdoc.repository.UsuarioCargoRepository;
+import br.uece.sisdoc.repository.UsuarioColegiadoRepository;
 import br.uece.sisdoc.repository.UsuarioRepository;
+import br.uece.sisdoc.repository.UsuarioReuniaoRepository;
 import br.uece.sisdoc.specification.UsuarioSpecification;
 
 @Service
@@ -39,7 +43,19 @@ public class UsuarioService {
 	UsuarioCargoRepository usuarioCargoRepository;
 	
 	@Autowired
+	UsuarioColegiadoRepository usuarioColegiadoRepository;
+	
+	@Autowired
+	UsuarioReuniaoRepository usuarioReuniaoRepository;
+	
+	@Autowired
 	private PasswordEncoder passwordEncoder;
+	
+	@Autowired
+	private UsuarioDocumentoService usuarioDocumentoService;
+	
+	@Autowired
+	private DocumentoService documentoService;
 	
 	public Usuario create(UsuarioDTO usuarioDTO) {
 		
@@ -83,7 +99,53 @@ public class UsuarioService {
 
 	public void delete(Long id) {
 		
+		Optional<Usuario> optUsuario = usuarioRepository.findById(id);
+		Usuario usuario = null;
+		if(optUsuario.isPresent()) {
+			usuario = optUsuario.get();
+		} else {
+			return;
+		}
+		
+		deletarDocumentosRecebidos(usuario);
+		deletarDocumentosCriados(usuario);
+		removerRelacaoUsuarioCargo(usuario.getId());
+		removerRelacaoUsuarioColegiado(usuario.getId());
+		removerRelacaoUsuarioReuniao(usuario.getId());
+		
 		usuarioRepository.deleteById(id);
+	}
+	
+	private boolean deletarDocumentosRecebidos(Usuario usuario) {
+		return usuarioDocumentoService.deleteByUsuario(usuario);
+	}
+	
+	private boolean deletarDocumentosCriados(Usuario usuario) {
+		return documentoService.deletarDocumentosUsuario(usuario);
+	}
+	
+	private void removerRelacaoUsuarioCargo(Long usuarioId) {
+		List<UsuarioCargo> usuariosCargo = new ArrayList<UsuarioCargo>();
+		usuariosCargo = usuarioCargoRepository.obterUsuarioCargosPeloUsuario(usuarioId);
+		for(UsuarioCargo usuarioCargo : usuariosCargo) {
+			usuarioCargoRepository.delete(usuarioCargo);
+		}
+	}
+	
+	private void removerRelacaoUsuarioColegiado(Long usuarioId) {
+		List<UsuarioColegiado> usuarioColegiados = new ArrayList<UsuarioColegiado>();
+		usuarioColegiados = usuarioColegiadoRepository.obterUsuarioColegiadoPeloUsuario(usuarioId);
+		for(UsuarioColegiado usuarioColegiado : usuarioColegiados) {
+			usuarioColegiadoRepository.delete(usuarioColegiado);
+		}
+	}
+	
+	private void removerRelacaoUsuarioReuniao(Long usuarioId) {
+		List<UsuarioReuniao> usuariosReuniao = new ArrayList<UsuarioReuniao>();
+		usuariosReuniao = usuarioReuniaoRepository.obterUsuarioReuniaoPeloUsuario(usuarioId);
+		for(UsuarioReuniao usuarioReuniao : usuariosReuniao) {
+			usuarioReuniaoRepository.delete(usuarioReuniao);
+		}
 	}
 
 	public Usuario findById(Long id) {

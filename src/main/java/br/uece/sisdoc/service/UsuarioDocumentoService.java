@@ -83,11 +83,46 @@ public class UsuarioDocumentoService {
 		return usuariosDocumento;
 	}
 	
+	public List<UsuarioDocumento> obterDocumetosRecebidos(Long usuarioId) {
+		UsuarioDocumentoSpecification userDocSpec = new UsuarioDocumentoSpecification();
+		
+		List<UsuarioDocumento> usuariosDocumento = usuarioDocumentoRepository.findAll(Specification.where(
+				userDocSpec.filterByUsuario(usuarioId)
+		));
+		
+		return usuariosDocumento;
+	}
+	
 	public boolean deleteByDocumento(Long documentoId) {
 		
 		int count = 0;
 		 
 		List<UsuarioDocumento> usuariosDocumento = getUsuarioDocumentoFromDocumentoId(documentoId);
+		int total = 0;
+		if(usuariosDocumento != null && usuariosDocumento.size() > 0) {
+			total = usuariosDocumento.size();
+			for (UsuarioDocumento usuDoc : usuariosDocumento) {
+				usuarioDocumentoRepository.delete(usuDoc);
+				count++;
+			}
+		}
+		
+		return total != 0 && count == total;
+	}
+	
+	public boolean deleteByUsuario(Usuario usuario) {
+		
+		if(usuario == null) {
+			return false;
+		}
+		
+		if(usuario.getId() == null) {
+			return false;
+		}
+		
+		int count = 0;
+		 
+		List<UsuarioDocumento> usuariosDocumento = obterDocumetosRecebidos(usuario.getId());
 		int total = 0;
 		if(usuariosDocumento != null && usuariosDocumento.size() > 0) {
 			total = usuariosDocumento.size();
