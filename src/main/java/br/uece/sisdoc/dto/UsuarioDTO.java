@@ -15,6 +15,10 @@ public class UsuarioDTO {
 	private Long cargoId;
 	
 	private String tratamento;
+	
+	private String curso;
+	
+	private String matricula;
 
 	public Long getId() {
 		return id;
@@ -70,6 +74,22 @@ public class UsuarioDTO {
 
 	public void setTratamento(String tratamento) {
 		this.tratamento = tratamento;
+	}
+
+	public String getCurso() {
+		return curso;
+	}
+
+	public void setCurso(String curso) {
+		this.curso = curso;
+	}
+
+	public String getMatricula() {
+		return matricula;
+	}
+
+	public void setMatricula(String matricula) {
+		this.matricula = matricula;
 	}
 	
 }

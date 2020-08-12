@@ -92,6 +92,15 @@ public class UsuarioService {
 		
 		Usuario usuario = dtoToUsuario(usuarioDTO);
 		
+		Usuario usuarioExistente = findById(usuarioDTO.getId());
+		if(usuarioExistente == null) {
+			return null;
+		} else {
+			if(usuario.getSenha() == null) {
+				usuario.setSenha(usuarioExistente.getSenha());
+			}
+		}
+		
 		usuario.setId(usuarioDTO.getId());
 		
 		return usuarioRepository.save(usuario);
@@ -215,9 +224,12 @@ public class UsuarioService {
 		
 		usuario.setNome(usuarioDTO.getNome());
 		usuario.setEmail(usuarioDTO.getEmail());
-		usuario.setSenha(passwordEncoder.encode(usuarioDTO.getSenha()));
+		if(usuarioDTO.getSenha() != null) {
+			usuario.setSenha(passwordEncoder.encode(usuarioDTO.getSenha()));
+		}
 		usuario.setTratamento(usuarioDTO.getTratamento());
-		
+		usuario.setCurso(usuarioDTO.getCurso());
+		usuario.setMatricula(usuarioDTO.getMatricula());
 		return usuario;
 	}
 	
