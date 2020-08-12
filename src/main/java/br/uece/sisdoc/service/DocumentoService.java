@@ -166,7 +166,7 @@ public class DocumentoService {
 	
 	@Transactional
 	public Documento create(DocumentoDTO documentoDto) {
-		
+		Documento documentoErro = new Documento();
 		try {
 			//Para o caso do documento ter uma reuniao envolvida a ele
 			Reuniao reuniao = null;
@@ -219,6 +219,7 @@ public class DocumentoService {
 			} else {
 				if(documentoDto.getMensagemSetor() != null && documentoDto.getMensagemSetor()) {
 					documentosEnviados = enviarMensagemParaListaSetores(documentoSaved, documentoDto.getDestinatariosIds());
+					documentoErro.setMensagem("Não existem usuários para os setores selecionados.");
 				} else {
 					documentosEnviados = enviarMensagemParaListaUsuarios(documentoSaved, documentoDto.getDestinatariosIds());
 				}
@@ -228,7 +229,7 @@ public class DocumentoService {
 				documentoRepository.delete(documentoSaved);
 				
 				//Nao foi possivel enviar este documento para nenhum usuarios
-				return null;
+				return documentoErro;
 			}
 			
 			//Se for um requerimento
@@ -340,6 +341,48 @@ public class DocumentoService {
 		}
 	}
 	
+	public String renderOficio(DocumentoDTO documentoDto, Long cargoId) {
+		
+		Optional<Cargo> optCargo = cargoRepository.findById(cargoId);
+		Cargo cargo = null;
+		if(optCargo.isPresent()) {
+			cargo = optCargo.get();
+		} else {
+			return null;
+		}
+		
+		try {
+			Documento documento = dtoToDocumento(documentoDto);
+			
+			String path = env.getProperty("default-path-pdf");
+			
+			File file = new File(path);
+			file.createNewFile();
+			
+			Document document = new Document();
+			PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream(file));
+			
+			document.open();
+			
+			generateHeader(writer, document, cargo.getSetor().getNome());
+			List<Long> destinatariosIds = documentoDto.getDestinatariosIds();
+			
+			int pageNumber = generateOficioBody(writer, document, documento, cargo, destinatariosIds, documento.getMensagemGeral(), documento.getMensagemSetor());
+			documento.setTotalPages(pageNumber);
+			
+			HeaderFooterPageEvent event = new HeaderFooterPageEvent(documento, cargo);
+			writer.setPageEvent(event);
+			
+			document.close();
+			
+			return path;
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
+	
 	public String generateOficio(Long id, Long cargoId) {
 		
 		Optional<Cargo> optCargo = cargoRepository.findById(cargoId);
@@ -370,6 +413,45 @@ public class DocumentoService {
 			
 			HeaderFooterPageEvent event = new HeaderFooterPageEvent(documento, cargo);
 			writer.setPageEvent(event);
+			
+			document.close();
+			
+			return path;
+			
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+		return null;
+		
+	}
+	
+	public String renderPortaria(DocumentoDTO documentoDto, Long cargoId) {
+		
+		Optional<Cargo> optCargo = cargoRepository.findById(cargoId);
+		Cargo cargo = null;
+		if(optCargo.isPresent()) {
+			cargo = optCargo.get();
+		} else {
+			return null;
+		}
+		
+		try {
+			Documento documento = dtoToDocumento(documentoDto);
+			
+			String path = env.getProperty("default-path-pdf");
+			
+			File file = new File(path);
+			file.createNewFile();
+			
+			Document document = new Document();
+			PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream(file));
+			
+			document.open();
+			
+			List<Long> destinatariosIds = documentoDto.getDestinatariosIds();
+			int pageNumber = generatePortariaBody(writer, document, documento, cargo, destinatariosIds, documento.getMensagemGeral(), documento.getMensagemSetor());
+			documento.setTotalPages(pageNumber);
 			
 			document.close();
 			
@@ -1461,6 +1543,37 @@ public class DocumentoService {
 //						ColumnText.showTextAligned(writer.getDirectContent(), Element.ALIGN_LEFT, saudacoes, INIT_TEXT, 0, 0);
 //					}
 //				}
+				
+				List<Usuario> usuarios = new ArrayList<Usuario>();
+				for(Long setorId : destinatariosIds) {
+					List<Usuario> principais = usuarioRepository.getPrincipalUsersFromSetor(setorId);
+					for(Usuario usuario : principais) {
+						usuarios.add(usuario);
+					}
+				}
+				
+				if(usuarios.size() == 1) {
+					
+					List<Cargo> cargosDestinatario = usuarioCargoRepository.getUserCargos(usuarios.get(0).getId());
+					Cargo cargoDestinatario = null;
+					
+					if(cargosDestinatario.size() > 1) {
+						for(Cargo cargoDest : cargosDestinatario) {
+							if(cargoDest.getIsCargoPrincipal()) {
+								cargoDestinatario = cargoDest;
+							}
+						}
+					} else if (cargosDestinatario.size() == 1) {
+						cargoDestinatario = cargosDestinatario.get(0);
+					}
+					
+					if(cargoDestinatario != null) {
+						Paragraph paraQuem = new Paragraph("Para: "+usuarios.get(0).getTratamento()+" "+usuarios.get(0).getNome()+" - "+cargoDestinatario.getNome() + " do " + cargoDestinatario.getSetor().getNome());
+						ColumnText.showTextAligned(writer.getDirectContent(), Element.ALIGN_LEFT, paraQuem, INIT_TEXT, 640, 0);
+					}
+					
+				}
+				
 			} else {
 				if(!destinatariosIds.isEmpty()) {
 					if(destinatariosIds.size() > 1) {

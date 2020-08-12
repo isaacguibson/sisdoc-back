@@ -57,6 +57,11 @@ public class SetorController {
 		return setorService.findById(id);
 	}
 	
+	@GetMapping("check-existem-usuarios/{id}")
+	public Boolean existemUsuariosNoSetor(@PathVariable Long id) {
+		
+		return setorService.existemUsuariosSetor(id);
+	}
 	
 	@PostMapping
 	public Setor create(@RequestBody Setor setor) {

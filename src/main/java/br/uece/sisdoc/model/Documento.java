@@ -93,6 +93,9 @@ public class Documento {
 	@Transient
 	private int totalPages;
 	
+	@Transient
+	private String mensagem;
+	
 	//Getters e Setters
 	public Long getId() {
 		return id;
@@ -245,5 +248,12 @@ public class Documento {
 	public void setReuniao(Reuniao reuniao) {
 		this.reuniao = reuniao;
 	}
-	
+
+	public String getMensagem() {
+		return mensagem;
+	}
+
+	public void setMensagem(String mensagem) {
+		this.mensagem = mensagem;
+	}
 }

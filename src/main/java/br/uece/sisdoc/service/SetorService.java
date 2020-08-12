@@ -11,7 +11,9 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import br.uece.sisdoc.model.Setor;
+import br.uece.sisdoc.model.Usuario;
 import br.uece.sisdoc.repository.SetorRepository;
+import br.uece.sisdoc.repository.UsuarioRepository;
 import br.uece.sisdoc.specification.SetorSpecification;
 
 @Service
@@ -19,6 +21,9 @@ public class SetorService {
 
 	@Autowired
 	SetorRepository setorRepository;
+	
+	@Autowired
+	UsuarioRepository usuarioRepository;
 	
 	public Setor create(Setor setor) {
 		
@@ -47,6 +52,20 @@ public class SetorService {
 			return optionalSetor.get();
 		} else {
 			return null;
+		}
+	}
+	
+	public Boolean existemUsuariosSetor(Long setorId) {
+		Optional<Setor> optSetor = setorRepository.findById(setorId);
+		if(optSetor.isPresent()) {
+			List<Usuario> usuarios = usuarioRepository.getPrincipalUsersFromSetor(setorId);
+			if(usuarios == null || usuarios.size() == 0) {
+				return false;
+			} else {
+				return true;
+			}
+		} else {
+			return false;
 		}
 	}
 	

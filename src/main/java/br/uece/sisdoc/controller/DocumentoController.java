@@ -134,6 +134,49 @@ public class DocumentoController {
 	}
 	
 	
+	@PostMapping("/render")
+	public ResponseEntity<byte[]> render(@RequestBody DocumentoDTO documentoDto, @RequestParam Long cargoId) {
+		
+		if(documentoDto == null) {
+			return null;
+		}
+		
+		if(documentoDto.getTipoDocumentoId() == null) {
+			return null;
+		}
+		
+		try {
+			String path = "";
+			if(documentoDto.getTipoDocumentoId() == 1) {
+				path = documentoService.renderOficio(documentoDto, cargoId);
+			} else if (documentoDto.getTipoDocumentoId() == 3) {
+				path = documentoService.renderPortaria(documentoDto, cargoId);
+			} else {
+				return null;
+			}
+			
+			File file = new File(path);
+			
+			byte[] contents = Files.readAllBytes(file.toPath());
+			
+			HttpHeaders headers = new HttpHeaders();
+			
+			headers.setContentType(MediaType.parseMediaType("application/pdf"));
+			
+			headers.setContentDispositionFormData("document.pdf", "document.pdf");
+			
+			headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
+			
+			ResponseEntity<byte[]> response = new ResponseEntity<>(contents, headers, HttpStatus.OK);
+			
+			return response;
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
+	
 	@GetMapping("/oficio/{id}")
 	public ResponseEntity<byte[]> createDocumentFile(@PathVariable Long id, @RequestParam Long cargoId) {
 		
