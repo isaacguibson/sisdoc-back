@@ -151,6 +151,14 @@ public class DocumentoController {
 				path = documentoService.renderOficio(documentoDto, cargoId);
 			} else if (documentoDto.getTipoDocumentoId() == 3) {
 				path = documentoService.renderPortaria(documentoDto, cargoId);
+			} else if (documentoDto.getTipoDocumentoId() == 4) {
+				path = documentoService.renderRequerimento(documentoDto, cargoId);
+			} else if (documentoDto.getTipoDocumentoId() == 5) {
+				path = documentoService.renderDespacho(documentoDto, cargoId);
+			} else if (documentoDto.getTipoDocumentoId() == 6) {
+				path = documentoService.renderDeclaracao(documentoDto, cargoId);
+			} else if (documentoDto.getTipoDocumentoId() == 7) {
+				path = documentoService.renderAta(documentoDto, cargoId);
 			} else {
 				return null;
 			}

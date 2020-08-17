@@ -504,6 +504,85 @@ public class DocumentoService {
 		
 	}
 	
+	public String renderAta(DocumentoDTO documentoDTO, Long cargoId) {
+		try {
+			Documento documento = dtoToDocumento(documentoDTO);
+			Cargo cargo = null;
+			
+			if(documento == null) {
+				return null;
+			} 
+			
+			Optional<Cargo> optCargo = cargoRepository.findById(cargoId);
+			
+			if(optCargo.isPresent()) {
+				cargo = optCargo.get();
+			} else {
+				return null;
+			}
+			
+			JasperReport jasper = JasperCompileManager.compileReport(env.getProperty("REPORTS_LOCATION")+"ata.jrxml");
+			Map<String, Object> map = new HashMap<>();
+			
+			map.put("TITULO", documento.getAssunto().toUpperCase());
+			map.put("CONTEUDO", documento.getConteudo());
+			Calendar calendar = Calendar.getInstance();
+			calendar.setTime(documento.getDataCriacao());
+			map.put("LOCAL_E_DATA", "Fortaleza, "+calendar.get(Calendar.DAY_OF_MONTH)+" de "+ getMes(calendar) + " de " + calendar.get(Calendar.YEAR));
+			
+			List<MembroColegiadoDTO> membros = new ArrayList<MembroColegiadoDTO>();
+
+			MembroColegiadoDTO membroReuniao = null;
+			if(documento.getMensagemGeral()) {
+				List<Usuario> membrosColegiado = colegiadoService.getMembros(documento.getReuniao().getColegiado().getId());
+			
+				for(Usuario membro : membrosColegiado) {
+					membroReuniao = new MembroColegiadoDTO();
+					membroReuniao.setNome(membro.getNome());
+					List<Cargo> cargos = usuarioCargoRepository.getUserCargos(membro.getId());
+					if(cargos!=null && cargos.size()>0) {
+						membroReuniao.setCargoSetor(cargos.get(0).getNome() + " do(a) " + cargos.get(0).getSetor().getNome());
+					} else {
+						membroReuniao.setCargoSetor("");
+					}
+					membros.add(membroReuniao);
+				}
+			} else {
+				List<UsuarioReuniao> membrosReuniao = usuarioReuniaoService.getUsuariosReuniaoByReuniaoId(documento.getReuniao().getId());
+			
+				for(UsuarioReuniao membro : membrosReuniao) {
+					membroReuniao = new MembroColegiadoDTO();
+					membroReuniao.setNome(membro.getUsuario().getNome());
+					List<Cargo> cargos = usuarioCargoRepository.getUserCargos(membro.getUsuario().getId());
+					if(cargos!=null && cargos.size()>0) {
+						membroReuniao.setCargoSetor(cargos.get(0).getNome() + " do(a) " + cargos.get(0).getSetor().getNome());
+					} else {
+						membroReuniao.setCargoSetor("");
+					}
+					membros.add(membroReuniao);
+				}
+			}
+			
+			JRDataSource jrds = new JRBeanCollectionDataSource(membros);
+			map.put("LIST", jrds);
+			
+			JRDataSource jrDataSource = new JREmptyDataSource();
+			
+			JasperPrint print = JasperFillManager.fillReport(jasper, map, jrDataSource);
+			
+			JasperExportManager.exportReportToPdfFile(print, env.getProperty("EXPORTED_REPORT_LOCATION")+"ata.pdf");
+			
+			File file = new File(env.getProperty("EXPORTED_REPORT_LOCATION")+"ata.pdf");
+			
+            return file.getAbsolutePath();
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
+	
 	public String generateAta(Long id, Long cargoId) {
 		try {
 			Documento documento = findById(id);
@@ -581,6 +660,110 @@ public class DocumentoService {
 		}
 		
 		return null;
+	}
+	
+	public String renderRequerimento(DocumentoDTO documentoDTO, Long cargoId) {
+		
+		try {
+			
+			Documento documento = dtoToDocumento(documentoDTO);
+			Cargo cargo = null;
+			
+			if(documento == null) {
+				return null;
+			} 
+			
+			Optional<Cargo> optCargo = cargoRepository.findById(cargoId);
+			
+			if(optCargo.isPresent()) {
+				cargo = optCargo.get();
+			} else {
+				return null;
+			}
+			
+			JasperReport jasper = JasperCompileManager.compileReport(env.getProperty("REPORTS_LOCATION")+"requerimento.jrxml");
+			Map<String, Object> map = new HashMap<>();
+			
+			map.put("NOME", documento.getUsuario().getNome().toUpperCase());
+			map.put("VINCULO", documento.getVinculo());
+			map.put("SETOR", cargo.getSetor().getSigla());
+			map.put("CURSO", documento.getUsuario().getCurso());
+			map.put("MATRICULA", documento.getUsuario().getMatricula());
+			map.put("REQUERIDO", documento.getRequerido());
+			
+			List<Long> rotinasJasper = new ArrayList<Long>();
+			if(documentoDTO.getRotinas() != null && documentoDTO.getRotinas().size() > 0) {
+				for(Long rotinaId : documentoDTO.getRotinas()) {
+					rotinasJasper.add(rotinaId);
+				}
+			}
+			map.put("ROTINAS", rotinasJasper);
+			
+			if(documentoDTO != null) {
+				if(documentoDTO.getOutrasRotinas() != null) {
+					for(int index = 0; index < documentoDTO.getOutrasRotinas().size(); index++) {
+						if(index == 0) {
+							map.put("O_ROT_1", documentoDTO.getOutrasRotinas().get(index).getLabel());
+						} else if (index == 1) {
+							map.put("O_ROT_2", documentoDTO.getOutrasRotinas().get(index).getLabel());
+						} else if (index == 2) {
+							map.put("O_ROT_3", documentoDTO.getOutrasRotinas().get(index).getLabel());
+						} else if (index == 3) {
+							map.put("O_ROT_4", documentoDTO.getOutrasRotinas().get(index).getLabel());
+						} else if(index == 4) {
+							map.put("O_ROT_5", documentoDTO.getOutrasRotinas().get(index).getLabel());
+						} else {
+							break;
+						}
+					}
+				}
+				
+				if(documentoDTO.getInformacoes() != null) {
+					for(int index = 0; index < documentoDTO.getInformacoes().size(); index++) {
+						if(index == 0) {
+							map.put("INFO_1", documentoDTO.getInformacoes().get(index).getLabel());
+						} else if (index == 1) {
+							map.put("INFO_2", documentoDTO.getInformacoes().get(index).getLabel());
+						} else if (index == 2) {
+							map.put("INFO_3", documentoDTO.getInformacoes().get(index).getLabel());
+						} else if (index == 3) {
+							map.put("INFO_4", documentoDTO.getInformacoes().get(index).getLabel());
+						} else {
+							break;
+						}
+					}
+				}
+			}
+			
+			JRDataSource jrDataSource = new JREmptyDataSource();
+			
+			JasperPrint print = JasperFillManager.fillReport(jasper, map, jrDataSource);
+			
+//			JRExporter exporter = new JRPdfExporter();
+//			
+//			File file = new File("C:\\Users\\Isaac\\requerimento.pdf");
+//			file.createNewFile();
+//			
+//			OutputStream saida = new FileOutputStream(file);
+//			
+//			exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
+//            exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, saida);
+//
+//            exporter.exportReport();
+			
+			JasperExportManager.exportReportToPdfFile(print, env.getProperty("EXPORTED_REPORT_LOCATION")+"requerimento.pdf");
+			
+			File file = new File(env.getProperty("EXPORTED_REPORT_LOCATION")+"requerimento.pdf");
+			
+            return file.getAbsolutePath();
+            
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return null;
+		
 	}
 	
 	public String generateRequerimento(Long id, Long cargoId) {
@@ -689,6 +872,47 @@ public class DocumentoService {
 		
 	}
 	
+	public String renderDeclaracao(DocumentoDTO documentoDTO, Long cargoId) {
+		
+		Optional<Cargo> optCargo = cargoRepository.findById(cargoId);
+		Cargo cargo = null;
+		if(optCargo.isPresent()) {
+			cargo = optCargo.get();
+		} else {
+			return null;
+		}
+		
+		try {
+			Documento documento = dtoToDocumento(documentoDTO);
+			
+			String path = env.getProperty("default-path-pdf");
+			
+			File file = new File(path);
+			file.delete();
+			file.createNewFile();
+			
+			Document document = new Document();
+			PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream(file));
+			
+			document.open();
+			
+			generateDeclaracaoHeader(writer, document, cargo.getSetor().getNome());
+			List<Long> destinatariosIds = documentoDTO.getDestinatariosIds();
+			int pageNumber = generateDeclaracaoBody(writer, document, documento, cargo, destinatariosIds, documento.getMensagemGeral(), documento.getMensagemSetor());
+			documento.setTotalPages(pageNumber);
+			
+			document.close();
+			
+			return path;
+			
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+		return null;
+		
+	}
+	
 	public String generateDeclaracao(Long id, Long cargoId) {
 		
 		Optional<Cargo> optCargo = cargoRepository.findById(cargoId);
@@ -716,6 +940,47 @@ public class DocumentoService {
 			generateDeclaracaoHeader(writer, document, cargo.getSetor().getNome());
 			List<Long> destinatariosIds = usuarioDocumentoRepository.getDestinatariosDoDoc(documento.getId());
 			int pageNumber = generateDeclaracaoBody(writer, document, documento, cargo, destinatariosIds, documento.getMensagemGeral(), documento.getMensagemSetor());
+			documento.setTotalPages(pageNumber);
+			
+			document.close();
+			
+			return path;
+			
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+		return null;
+		
+	}
+	
+	public String renderDespacho(DocumentoDTO documentoDTO, Long cargoId) {
+		
+		Optional<Cargo> optCargo = cargoRepository.findById(cargoId);
+		Cargo cargo = null;
+		if(optCargo.isPresent()) {
+			cargo = optCargo.get();
+		} else {
+			return null;
+		}
+		
+		try {
+			Documento documento = dtoToDocumento(documentoDTO);
+			
+			String path = env.getProperty("default-path-pdf");
+			
+			File file = new File(path);
+			file.delete();
+			file.createNewFile();
+			
+			Document document = new Document();
+			PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream(file));
+			
+			document.open();
+			
+			generateDespachoHeader(writer, document, cargo.getSetor().getNome());
+			List<Long> destinatariosIds = documentoDTO.getDestinatariosIds();
+			int pageNumber = generateDespachoBody(writer, document, documento, cargo, destinatariosIds, documento.getMensagemGeral(), documento.getMensagemSetor());
 			documento.setTotalPages(pageNumber);
 			
 			document.close();
