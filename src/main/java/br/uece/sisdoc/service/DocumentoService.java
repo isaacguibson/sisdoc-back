@@ -449,6 +449,7 @@ public class DocumentoService {
 			
 			document.open();
 			
+			generateHeader(writer, document, cargo.getSetor().getNome());
 			List<Long> destinatariosIds = documentoDto.getDestinatariosIds();
 			int pageNumber = generatePortariaBody(writer, document, documento, cargo, destinatariosIds, documento.getMensagemGeral(), documento.getMensagemSetor());
 			documento.setTotalPages(pageNumber);
@@ -488,6 +489,7 @@ public class DocumentoService {
 			
 			document.open();
 			
+			generateHeader(writer, document, cargo.getSetor().getNome());
 			List<Long> destinatariosIds = usuarioDocumentoRepository.getDestinatariosDoDoc(documento.getId());
 			int pageNumber = generatePortariaBody(writer, document, documento, cargo, destinatariosIds, documento.getMensagemGeral(), documento.getMensagemSetor());
 			documento.setTotalPages(pageNumber);
@@ -1789,13 +1791,17 @@ public class DocumentoService {
 			
 			ColumnText.showTextAligned(writer.getDirectContent(), Element.ALIGN_RIGHT, localData, 560, 680, 0);
 			
-			Paragraph deQuem = new Paragraph("De: "+documento.getUsuario().getTratamento()+" "+documento.getUsuario().getNome()+" - "+cargo.getNome() + " do " + cargo.getSetor().getNome());
-			ColumnText.showTextAligned(writer.getDirectContent(), Element.ALIGN_LEFT, deQuem, INIT_TEXT, 660, 0);
+//			Paragraph deQuem = new Paragraph("De: "+documento.getUsuario().getTratamento()+" "+documento.getUsuario().getNome()+" - "+cargo.getNome() + " do " + cargo.getSetor().getNome());
+//			ColumnText.showTextAligned(writer.getDirectContent(), Element.ALIGN_LEFT, deQuem, INIT_TEXT, 660, 0);
 			
 			if(isMensagemGeral) {
-				//TODO realizar alteracoes para mensagem geral
-				//Paragraph saudacoes = new Paragraph("Prezados,");
-				//ColumnText.showTextAligned(writer.getDirectContent(), Element.ALIGN_LEFT, saudacoes, INIT_TEXT, 0, 0);
+				if(isMensagemSetor) {
+					Paragraph paraQuem = new Paragraph("Diretores e coordenadores");
+					ColumnText.showTextAligned(writer.getDirectContent(), Element.ALIGN_LEFT, paraQuem, INIT_TEXT, 640, 0);
+				} else {
+					Paragraph paraQuem = new Paragraph("Diretores, coordenadores, professores, secretários, alunos e funcionários");
+					ColumnText.showTextAligned(writer.getDirectContent(), Element.ALIGN_LEFT, paraQuem, INIT_TEXT, 640, 0);
+				}
 			} else if (isMensagemSetor) {
 				//TODO realizar alteracoes para mensagem setor
 //				if(!destinatariosIds.isEmpty()) {
@@ -1833,16 +1839,50 @@ public class DocumentoService {
 					}
 					
 					if(cargoDestinatario != null) {
-						Paragraph paraQuem = new Paragraph("Para: "+usuarios.get(0).getTratamento()+" "+usuarios.get(0).getNome()+" - "+cargoDestinatario.getNome() + " do " + cargoDestinatario.getSetor().getNome());
+						Paragraph paraQuem = new Paragraph(usuarios.get(0).getTratamento()+" "+usuarios.get(0).getNome()+" - "+cargoDestinatario.getNome() + " do " + cargoDestinatario.getSetor().getNome());
 						ColumnText.showTextAligned(writer.getDirectContent(), Element.ALIGN_LEFT, paraQuem, INIT_TEXT, 640, 0);
 					}
 					
+				} else {
+					Paragraph paraQuem = new Paragraph("Diretores e coordenadores");
+					ColumnText.showTextAligned(writer.getDirectContent(), Element.ALIGN_LEFT, paraQuem, INIT_TEXT, 640, 0);
 				}
 				
 			} else {
 				if(!destinatariosIds.isEmpty()) {
 					if(destinatariosIds.size() > 1) {
+						List<String> cargos = new ArrayList<String>();
+						for(Long usuariosIds : destinatariosIds) {
+							Optional<Usuario> optUsuarioDestino = usuarioRepository.findById(usuariosIds);
+							if(optUsuarioDestino.isPresent()) {
+								List<Cargo> cargosDestinatario = usuarioCargoRepository.getUserCargos(optUsuarioDestino.get().getId());
+							
+								if(cargosDestinatario.size() > 1) {
+									for(Cargo cargoDest : cargosDestinatario) {
+										if(cargoDest.getIsCargoPrincipal()) {
+											String cargoPlural = cargoPlural(cargoDest.getNome());
+											if(!cargos.contains(cargoPlural)) {
+												cargos.add(cargoPlural);
+											}
+										}
+									}
+								} else if (cargosDestinatario.size() == 1) {
+									String cargoPlural = cargoPlural(cargosDestinatario.get(0).getNome());
+									if(!cargos.contains(cargoPlural)) {
+										cargos.add(cargoPlural);
+									}
+								}
+							
+							}
+						}
 						
+						String destinos = "";
+						for(String nomeCargo : cargos) {
+							destinos = destinos + nomeCargo + ", ";
+						}
+						destinos = destinos.substring(0, destinos.length() - 2);
+						Paragraph paraQuem = new Paragraph(destinos);
+						ColumnText.showTextAligned(writer.getDirectContent(), Element.ALIGN_LEFT, paraQuem, INIT_TEXT, 640, 0);
 					} else {
 						
 						//Paragraph saudacoes = new Paragraph("Prezado(a),");
@@ -1866,7 +1906,7 @@ public class DocumentoService {
 							}
 							
 							if(cargoDestinatario != null) {
-								Paragraph paraQuem = new Paragraph("Para: "+optUsuarioDestino.get().getTratamento()+" "+optUsuarioDestino.get().getNome()+" - "+cargoDestinatario.getNome() + " do " + cargoDestinatario.getSetor().getNome());
+								Paragraph paraQuem = new Paragraph(optUsuarioDestino.get().getTratamento()+" "+optUsuarioDestino.get().getNome()+" - "+cargoDestinatario.getNome() + " do " + cargoDestinatario.getSetor().getNome());
 								ColumnText.showTextAligned(writer.getDirectContent(), Element.ALIGN_LEFT, paraQuem, INIT_TEXT, 640, 0);
 							}
 						
@@ -1931,6 +1971,32 @@ public class DocumentoService {
 		
 		return 0;
 		
+	}
+	
+	private String cargoPlural(String cargo) {
+		String cargoPlural = "";
+		
+		if(cargo == null) {
+			return "";
+		}
+		
+		if (cargo.equals("")) {
+			return "";
+		}
+		
+		if(cargo.substring(cargo.length() - 1).equals("r")) {
+			cargoPlural = cargo + "es";
+			return cargoPlural;
+		} else if(cargo.substring(cargo.length() - 1).equals("l")) {
+			cargoPlural = cargo.substring(0, cargo.length() - 1) + "is";
+			return cargoPlural;
+		} else if(cargo.substring(cargo.length() - 1).equals("s")) {
+			cargoPlural = cargo;
+			return cargoPlural;
+		} else {
+			cargoPlural = cargo + "s";
+			return cargoPlural;
+		}
 	}
 	
 	private int generateDeclaracaoHeader(PdfWriter writer, Document document, String setor) {
@@ -2224,17 +2290,17 @@ public class DocumentoService {
 		
 		try {
 			
-			for(int index = 0; index < 2; index++) {
+			for(int index = 0; index < 5; index++) {
 				document.add(new Phrase("\n"));
 			}
 			
-			Image imageEstado = Image.getInstance(env.getProperty("portaria-image-estado"));
-			imageEstado.setAlignment(Element.ALIGN_CENTER);
-    		imageEstado.scalePercent(30.0f, 30.0f);
+//			Image imageEstado = Image.getInstance(env.getProperty("portaria-image-estado"));
+//			imageEstado.setAlignment(Element.ALIGN_CENTER);
+//    		imageEstado.scalePercent(30.0f, 30.0f);
+//    		
+//    		document.add(imageEstado);
     		
-    		document.add(imageEstado);
-    		
-    		document.add(new Phrase("\n"));
+//    		document.add(new Phrase("\n"));
     		
     		Paragraph numPortaria = new Paragraph("PORTARIA Nº "+documento.getIdentificador());
     		numPortaria.setAlignment(Element.ALIGN_CENTER);
@@ -2272,7 +2338,7 @@ public class DocumentoService {
 			Paragraph funcaoUsuario = new Paragraph();
 			funcaoUsuario.setAlignment(Element.ALIGN_CENTER);
 			funcaoUsuario.getFont().setStyle(Font.BOLD);
-			funcaoUsuario.add(cargo.getNome().toUpperCase() + ", NO EXERCÍCIO DA PRESIDÊNCIA, DA FUNECE");
+			funcaoUsuario.add(cargo.getNome());
 			document.add(funcaoUsuario);
 			
 			return writer.getPageNumber();
