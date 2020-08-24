@@ -24,6 +24,8 @@ public class DocumentoDTO {
 	
 	private List<Long> destinatariosIds;
 	
+	private List<Long> faltasIds;
+	
 	private List<Long> setoresDestinatariosIds;
 	
 	private Boolean mensagemGeral;
@@ -41,6 +43,8 @@ public class DocumentoDTO {
 	private List<GenericListObject> informacoes; //para requerimentos
 	
 	private ReuniaoDTO reuniao;
+	
+	private String origem;
 
 	public Long getId() {
 		return id;
@@ -192,6 +196,22 @@ public class DocumentoDTO {
 
 	public void setDataCriacao(String dataCriacao) {
 		this.dataCriacao = dataCriacao;
+	}
+
+	public String getOrigem() {
+		return origem;
+	}
+
+	public void setOrigem(String origem) {
+		this.origem = origem;
+	}
+
+	public List<Long> getFaltasIds() {
+		return faltasIds;
+	}
+
+	public void setFaltasIds(List<Long> faltasIds) {
+		this.faltasIds = faltasIds;
 	}
 	
 }

@@ -81,6 +81,9 @@ public class Documento {
 	@JoinColumn(name = "reuniao_id", referencedColumnName = "id_reuniao", nullable = true)
 	private Reuniao reuniao;
 	
+	@Column(name = "origem", nullable = true)
+	private String origem;
+	
 	@Transient
 	private List<Rotina> rotinas;
 	
@@ -89,6 +92,9 @@ public class Documento {
 	
 	@Transient
 	private List<GenericListObject> informacoes;
+	
+	@Transient
+	private List<GenericListObject> faltasJustificadas;
 	
 	@Transient
 	private int totalPages;
@@ -255,5 +261,21 @@ public class Documento {
 
 	public void setMensagem(String mensagem) {
 		this.mensagem = mensagem;
+	}
+
+	public String getOrigem() {
+		return origem;
+	}
+
+	public void setOrigem(String origem) {
+		this.origem = origem;
+	}
+
+	public List<GenericListObject> getFaltasJustificadas() {
+		return faltasJustificadas;
+	}
+
+	public void setFaltasJustificadas(List<GenericListObject> faltasJustificadas) {
+		this.faltasJustificadas = faltasJustificadas;
 	}
 }

@@ -2,9 +2,12 @@ package br.uece.sisdoc.model;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
@@ -23,6 +26,10 @@ public class Colegiado {
 	
 	@Column(name = "descricao", nullable = false)
 	private String descricao;
+	
+	@ManyToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "setor_id", referencedColumnName = "id_setor", nullable = true)
+	private Setor setor;
 
 	
 	public Long getId() {
@@ -48,4 +55,13 @@ public class Colegiado {
 	public void setDescricao(String descricao) {
 		this.descricao = descricao;
 	}
+
+	public Setor getSetor() {
+		return setor;
+	}
+
+	public void setSetor(Setor setor) {
+		this.setor = setor;
+	}
+	
 }

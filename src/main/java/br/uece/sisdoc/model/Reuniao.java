@@ -24,6 +24,15 @@ public class Reuniao {
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "colegiado_id", referencedColumnName = "id_colegiado")
 	private Colegiado colegiado;
+	
+	@Column(name = "tipo", nullable = true)
+	private String tipo;
+	
+	@Column(name = "numero", nullable = true)
+	private Integer numero;
+	
+	@Column(name = "hora", nullable = true)
+	private String hora;
 
 	public Long getId() {
 		return id;
@@ -39,5 +48,29 @@ public class Reuniao {
 
 	public void setColegiado(Colegiado colegiado) {
 		this.colegiado = colegiado;
+	}
+
+	public String getTipo() {
+		return tipo;
+	}
+
+	public void setTipo(String tipo) {
+		this.tipo = tipo;
+	}
+
+	public Integer getNumero() {
+		return numero;
+	}
+
+	public void setNumero(Integer numero) {
+		this.numero = numero;
+	}
+
+	public String getHora() {
+		return hora;
+	}
+
+	public void setHora(String hora) {
+		this.hora = hora;
 	}
 }

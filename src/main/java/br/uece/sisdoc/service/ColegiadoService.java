@@ -27,6 +27,9 @@ public class ColegiadoService {
 	@Autowired
 	UsuarioColegiadoService usuarioColegiadoService;
 	
+	@Autowired
+	SetorService setorService;
+	
 	public Colegiado findById(Long id) {
 		
 		Optional<Colegiado> optionalColegiado = colegiadoRepository.findById(id);
@@ -57,6 +60,7 @@ public class ColegiadoService {
 			membrosIds.add(usuarioColegiado.getUsuario().getId());
 		}
 		colegiadoDTO.setMembrosIds(membrosIds);
+		colegiadoDTO.setSetorId(colegiado.getSetor().getId());
 		
 		return colegiadoDTO;
 	}
@@ -158,6 +162,13 @@ public class ColegiadoService {
 		colegiado.setId(colegiadoDTO.getId());
 		colegiado.setDescricao(colegiadoDTO.getDescricao());
 		colegiado.setNome(colegiadoDTO.getNome().toUpperCase());
+		
+		Setor setor = setorService.findById(colegiadoDTO.getSetorId());
+		
+		if(setor != null) {
+			colegiado.setSetor(setor);
+		}
+		
 		return colegiado;
 	}
 	

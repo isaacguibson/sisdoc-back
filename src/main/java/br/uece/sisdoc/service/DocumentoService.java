@@ -199,14 +199,22 @@ public class DocumentoService {
 				return null;
 			}
 			
+			//Caso seja uma ATA
+			if(documentoDto.getTipoDocumentoId() == 7) {
+				salvarFaltasDaAta(documentoSaved, documentoDto);
+			}
+			
 			//Caso a lista de usuarios venha nula ou vazia enviar o documentos para todos
 			//Deve ser tratado no front
 			int documentosEnviados = 0;
+			
 			if(documentoDto.getDestinatariosIds() == null || documentoDto.getDestinatariosIds().isEmpty() || documento.getMensagemGeral()) {
 				
 				//Se for uma ATA
 				if(documentoDto.getTipoDocumentoId() == 7) {
 					documentosEnviados = enviarParaTodosMembrosColegiado(documentoSaved);
+				} else if(documentoDto.getTipoDocumentoId() == 8) { /*Enviar apenas se não for um PARECER*/
+					documentosEnviados = 1; /*Apenas para salvar*/
 				} else {
 					if(documentoDto.getMensagemSetor() != null && documentoDto.getMensagemSetor()) {
 						documentosEnviados = enviarMensagemParaTodosSetores(documentoSaved);
@@ -253,6 +261,31 @@ public class DocumentoService {
 			return usuarioReuniaoService.saveByReuniao(reuniao, documentoDTO.getDestinatariosIds());
 		} else {
 			return usuarioReuniaoService.saveForWholeColegiado(reuniao);
+		}
+	}
+	
+	private void salvarFaltasDaAta(Documento documento, DocumentoDTO documentoDto) {
+		
+		List<GenericListObject> faltasExistentes = new ArrayList<GenericListObject>();
+		GenericListObjectSpecification genSpec = new GenericListObjectSpecification();
+		faltasExistentes
+		  = genericListObjectRepository.findAll(Specification.where(
+				  genSpec.findByDocumento(documento)
+			));
+		
+		if(faltasExistentes.size()>0) {
+			for(GenericListObject faltaExistente : faltasExistentes) {
+				genericListObjectRepository.delete(faltaExistente);
+			}
+		}
+		
+		if(documentoDto.getFaltasIds()!=null && documentoDto.getFaltasIds().size() > 0) {
+			for (Long usuarioId : documentoDto.getFaltasIds()) {
+				GenericListObject usuarioObject = new GenericListObject();
+				usuarioObject.setValue(usuarioId);
+				usuarioObject.setDocumento(documento);
+				genericListObjectRepository.save(usuarioObject);
+			}
 		}
 	}
 	
@@ -454,6 +487,9 @@ public class DocumentoService {
 			int pageNumber = generatePortariaBody(writer, document, documento, cargo, destinatariosIds, documento.getMensagemGeral(), documento.getMensagemSetor());
 			documento.setTotalPages(pageNumber);
 			
+			HeaderFooterPageEvent event = new HeaderFooterPageEvent(documento, cargo);
+			writer.setPageEvent(event);
+			
 			document.close();
 			
 			return path;
@@ -494,6 +530,9 @@ public class DocumentoService {
 			int pageNumber = generatePortariaBody(writer, document, documento, cargo, destinatariosIds, documento.getMensagemGeral(), documento.getMensagemSetor());
 			documento.setTotalPages(pageNumber);
 			
+			HeaderFooterPageEvent event = new HeaderFooterPageEvent(documento, cargo);
+			writer.setPageEvent(event);
+			
 			document.close();
 			
 			return path;
@@ -527,10 +566,14 @@ public class DocumentoService {
 			Map<String, Object> map = new HashMap<>();
 			
 			map.put("TITULO", documento.getAssunto().toUpperCase());
-			map.put("CONTEUDO", documento.getConteudo());
+			map.put("CONTEUDO", documento.getConteudo().replaceAll("color: rgb(0, 0, 0);", ""));
+			
 			Calendar calendar = Calendar.getInstance();
 			calendar.setTime(documento.getDataCriacao());
 			map.put("LOCAL_E_DATA", "Fortaleza, "+calendar.get(Calendar.DAY_OF_MONTH)+" de "+ getMes(calendar) + " de " + calendar.get(Calendar.YEAR));
+			
+			map.put("NOME_PRINCIPAL", documento.getUsuario().getNome());
+			map.put("CARGO_FUNCAO", cargo.getNome() + " do " + cargo.getSetor().getNome() + " da UECE.");
 			
 			List<MembroColegiadoDTO> membros = new ArrayList<MembroColegiadoDTO>();
 
@@ -552,19 +595,40 @@ public class DocumentoService {
 			} else {
 				List<UsuarioReuniao> membrosReuniao = usuarioReuniaoService.getUsuariosReuniaoByReuniaoId(documento.getReuniao().getId());
 			
-				for(UsuarioReuniao membro : membrosReuniao) {
-					membroReuniao = new MembroColegiadoDTO();
-					membroReuniao.setNome(membro.getUsuario().getNome());
-					List<Cargo> cargos = usuarioCargoRepository.getUserCargos(membro.getUsuario().getId());
-					if(cargos!=null && cargos.size()>0) {
-						membroReuniao.setCargoSetor(cargos.get(0).getNome() + " do(a) " + cargos.get(0).getSetor().getNome());
-					} else {
-						membroReuniao.setCargoSetor("");
+				if (membrosReuniao != null) {
+					for(UsuarioReuniao membro : membrosReuniao) {
+						membroReuniao = new MembroColegiadoDTO();
+						membroReuniao.setNome(membro.getUsuario().getNome());
+						List<Cargo> cargos = usuarioCargoRepository.getUserCargos(membro.getUsuario().getId());
+						if(cargos!=null && cargos.size()>0) {
+							membroReuniao.setCargoSetor(cargos.get(0).getNome() + " do(a) " + cargos.get(0).getSetor().getNome());
+						} else {
+							membroReuniao.setCargoSetor("");
+						}
+						membros.add(membroReuniao);
 					}
-					membros.add(membroReuniao);
+				} else {
+					if (documentoDTO.getDestinatariosIds() != null) {
+						for(Long destinatarioId : documentoDTO.getDestinatariosIds()) {
+							MembroColegiadoDTO membroReuniaoTemp = new MembroColegiadoDTO();
+							Optional<Usuario> optUsuarioReuniaoTemp = usuarioRepository.findById(destinatarioId);
+							if(optUsuarioReuniaoTemp.isPresent()) {
+								Usuario usuarioTemp = optUsuarioReuniaoTemp.get();
+								membroReuniaoTemp.setNome(usuarioTemp.getNome());
+								List<Cargo> cargosTemp = usuarioCargoRepository.getUserCargos(usuarioTemp.getId());
+								if(cargosTemp!=null && cargosTemp.size()>0) {
+									membroReuniaoTemp.setCargoSetor(cargosTemp.get(0).getNome() + " do(a) " + cargosTemp.get(0).getSetor().getNome());
+								} else {
+									membroReuniaoTemp.setCargoSetor("");
+								}
+								membros.add(membroReuniaoTemp);
+							}
+						}
+					}
 				}
 			}
 			
+			map.put("APRESENTACAO", gerarTextoInicialAta(documento, documento.getReuniao().getColegiado(), cargo, membros, documentoDTO.getFaltasIds()));
 			JRDataSource jrds = new JRBeanCollectionDataSource(membros);
 			map.put("LIST", jrds);
 			
@@ -585,9 +649,83 @@ public class DocumentoService {
 		return null;
 	}
 	
+	private String gerarTextoInicialAta(Documento documento, Colegiado colegiado, Cargo cargo, List<MembroColegiadoDTO> membrosPresentes, List<Long> usuarioFaltasIds) {
+		String texto = "";
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(documento.getDataCriacao());
+		String nomeSetor = colegiado.getSetor() == null ? colegiado.getNome() : colegiado.getSetor().getNome();
+		String ordinaria = documento.getReuniao().getTipo().equals("1") ? "ORDINÁRIA" : "EXTRAORDINÁRIA";
+		
+		texto = "ATA DA " + documento.getReuniao().getNumero() + "ª" + " REUNIÃO " +
+				ordinaria + " DO(A) " + nomeSetor.toUpperCase() + ", REALIZADA NO DIA " +
+				calendar.get(Calendar.DAY_OF_MONTH) + " DE " + getMes(calendar).toUpperCase() + " DE " + calendar.get(Calendar.YEAR) + 
+				", " + getDiaSemana(calendar.get(Calendar.DAY_OF_WEEK)) + " INICIADA ÀS " + documento.getReuniao().getHora() + " HORAS, SOB A CONVOCAÇÃO DO(A) " + 
+				cargo.getNome().toUpperCase() + ". COMPARECIMENTOS: " + gerarListaComparecimento(membrosPresentes)
+				+ gerarListaFalta(usuarioFaltasIds) + ".";
+		
+		return texto;
+	}
+	
+	private String gerarListaComparecimento(List<MembroColegiadoDTO> membrosPresentes) {
+		String presentes = "";
+		
+		for(MembroColegiadoDTO membro : membrosPresentes) {
+			presentes = presentes + membro.getNome() + ", ";
+		}
+		
+		if(!presentes.equals("") ) {
+			presentes = presentes.substring(0, presentes.length() - 2);
+		}
+		
+		return presentes.toUpperCase();
+	}
+	
+	private String gerarListaFalta(List<Long> usuariosFaltaIds) {
+		String faltas = "";
+		
+		if(usuariosFaltaIds == null || usuariosFaltaIds.size() == 0) {
+			return "";
+		}
+		
+		for(Long id : usuariosFaltaIds) {
+			Optional<Usuario> optUsuario = usuarioRepository.findById(id);
+			if(optUsuario.isPresent()) {
+				Usuario usuario = optUsuario.get();
+				faltas = faltas + usuario.getNome() + ", ";
+			}
+		}
+		
+		if(!faltas.equals("") ) {
+			faltas = faltas.substring(0, faltas.length() - 2);
+		}
+		
+		return ". FALTAS JUSTIFICADAS: " + faltas.toUpperCase();
+	}
+	
+	private String getDiaSemana(Integer dia) {
+		if(dia == Calendar.SUNDAY) {
+			return "DOMINGO";
+		} else if (dia == Calendar.MONDAY) {
+			return "SEGUNDA-FEIRA";
+		} else if (dia == Calendar.TUESDAY) {
+			return "TERÇA-FEIRA";
+		} else if (dia == Calendar.WEDNESDAY) {
+			return "QUARTA-FEIRA";
+		} else if (dia == Calendar.THURSDAY) {
+			return "QUINTA-FEIRA";
+		} else if (dia == Calendar.FRIDAY) {
+			return "SEXTA-FEIRA";
+		} else if (dia == Calendar.SATURDAY) {
+			return "SÁBADO";
+		} else {
+			return "";
+		}
+	}
+	
 	public String generateAta(Long id, Long cargoId) {
 		try {
 			Documento documento = findById(id);
+			DocumentoDTO documentoDTO = documentoToDTO(documento);
 			Cargo cargo = null;
 			
 			if(documento == null) {
@@ -611,6 +749,9 @@ public class DocumentoService {
 			calendar.setTime(documento.getDataCriacao());
 			map.put("LOCAL_E_DATA", "Fortaleza, "+calendar.get(Calendar.DAY_OF_MONTH)+" de "+ getMes(calendar) + " de " + calendar.get(Calendar.YEAR));
 			
+			map.put("NOME_PRINCIPAL", documento.getUsuario().getNome());
+			map.put("CARGO_FUNCAO", cargo.getNome() + " do " + cargo.getSetor().getNome() + " da UECE.");
+			
 			List<MembroColegiadoDTO> membros = new ArrayList<MembroColegiadoDTO>();
 
 			MembroColegiadoDTO membroReuniao = null;
@@ -644,6 +785,7 @@ public class DocumentoService {
 				}
 			}
 			
+			map.put("APRESENTACAO", gerarTextoInicialAta(documento, documento.getReuniao().getColegiado(), cargo, membros, documentoDTO.getFaltasIds()));
 			JRDataSource jrds = new JRBeanCollectionDataSource(membros);
 			map.put("LIST", jrds);
 			
@@ -903,6 +1045,9 @@ public class DocumentoService {
 			int pageNumber = generateDeclaracaoBody(writer, document, documento, cargo, destinatariosIds, documento.getMensagemGeral(), documento.getMensagemSetor());
 			documento.setTotalPages(pageNumber);
 			
+			HeaderFooterPageEvent event = new HeaderFooterPageEvent(documento, cargo);
+			writer.setPageEvent(event);
+			
 			document.close();
 			
 			return path;
@@ -943,6 +1088,97 @@ public class DocumentoService {
 			List<Long> destinatariosIds = usuarioDocumentoRepository.getDestinatariosDoDoc(documento.getId());
 			int pageNumber = generateDeclaracaoBody(writer, document, documento, cargo, destinatariosIds, documento.getMensagemGeral(), documento.getMensagemSetor());
 			documento.setTotalPages(pageNumber);
+			
+			HeaderFooterPageEvent event = new HeaderFooterPageEvent(documento, cargo);
+			writer.setPageEvent(event);
+			
+			document.close();
+			
+			return path;
+			
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+		return null;
+		
+	}
+	
+	public String renderParecer(DocumentoDTO documentoDTO, Long cargoId) {
+		
+		Optional<Cargo> optCargo = cargoRepository.findById(cargoId);
+		Cargo cargo = null;
+		if(optCargo.isPresent()) {
+			cargo = optCargo.get();
+		} else {
+			return null;
+		}
+		
+		try {
+			Documento documento = dtoToDocumento(documentoDTO);
+			
+			String path = env.getProperty("default-path-pdf");
+			
+			File file = new File(path);
+			file.delete();
+			file.createNewFile();
+			
+			Document document = new Document();
+			PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream(file));
+			
+			document.open();
+			
+			generateDespachoHeader(writer, document, cargo.getSetor().getNome());
+			List<Long> destinatariosIds = documentoDTO.getDestinatariosIds();
+			int pageNumber = generateParecerBody(writer, document, documento, cargo, destinatariosIds, documento.getMensagemGeral(), documento.getMensagemSetor());
+			documento.setTotalPages(pageNumber);
+			
+			HeaderFooterPageEvent event = new HeaderFooterPageEvent(documento, cargo);
+			writer.setPageEvent(event);
+			
+			document.close();
+			
+			return path;
+			
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+		return null;
+		
+	}
+	
+	public String generateParecer(Long id, Long cargoId) {
+		
+		Optional<Cargo> optCargo = cargoRepository.findById(cargoId);
+		Cargo cargo = null;
+		if(optCargo.isPresent()) {
+			cargo = optCargo.get();
+		} else {
+			return null;
+		}
+		
+		try {
+			Documento documento = documentoRepository.getOne(id);
+			
+			String path = env.getProperty("default-path-pdf");
+			
+			File file = new File(path);
+			file.delete();
+			file.createNewFile();
+			
+			Document document = new Document();
+			PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream(file));
+			
+			document.open();
+			
+			generateDespachoHeader(writer, document, cargo.getSetor().getNome());
+			List<Long> destinatariosIds = usuarioDocumentoRepository.getDestinatariosDoDoc(documento.getId());
+			int pageNumber = generateParecerBody(writer, document, documento, cargo, destinatariosIds, documento.getMensagemGeral(), documento.getMensagemSetor());
+			documento.setTotalPages(pageNumber);
+			
+			HeaderFooterPageEvent event = new HeaderFooterPageEvent(documento, cargo);
+			writer.setPageEvent(event);
 			
 			document.close();
 			
@@ -985,6 +1221,9 @@ public class DocumentoService {
 			int pageNumber = generateDespachoBody(writer, document, documento, cargo, destinatariosIds, documento.getMensagemGeral(), documento.getMensagemSetor());
 			documento.setTotalPages(pageNumber);
 			
+			HeaderFooterPageEvent event = new HeaderFooterPageEvent(documento, cargo);
+			writer.setPageEvent(event);
+			
 			document.close();
 			
 			return path;
@@ -1025,6 +1264,9 @@ public class DocumentoService {
 			List<Long> destinatariosIds = usuarioDocumentoRepository.getDestinatariosDoDoc(documento.getId());
 			int pageNumber = generateDespachoBody(writer, document, documento, cargo, destinatariosIds, documento.getMensagemGeral(), documento.getMensagemSetor());
 			documento.setTotalPages(pageNumber);
+			
+			HeaderFooterPageEvent event = new HeaderFooterPageEvent(documento, cargo);
+			writer.setPageEvent(event);
 			
 			document.close();
 			
@@ -1080,10 +1322,14 @@ public class DocumentoService {
 				if(!salvarMembrosReuniao(documentoToUpdate.getReuniao(), documentoDto)) {
 					return null;
 				}
-				
+				reuniaoService.save(documento.getReuniao());
 			}
 			
 			documento = documentoRepository.save(documentoToUpdate);
+			
+			if(documentoDto.getTipoDocumentoId() == 7) {
+				salvarFaltasDaAta(documento, documentoDto);
+			}
 			
 			if(documento == null) {
 				return null;
@@ -1197,6 +1443,16 @@ public class DocumentoService {
 		} else if(documento.getTipoDocumento().getId() == ATA) {
 			usuarioReuniaoService.excluirUsuariosReuniao(documento.getReuniao());
 			reuniaoId = documento.getReuniao().getId();
+			
+			List<GenericListObject> faltasExistentes = new ArrayList<GenericListObject>();
+			GenericListObjectSpecification genSpec = new GenericListObjectSpecification();
+			faltasExistentes
+			  = genericListObjectRepository.findAll(Specification.where(
+					  genSpec.findByDocumento(documento)
+				));
+			for(GenericListObject falta : faltasExistentes) {
+				genericListObjectRepository.delete(falta);
+			}
 		}
 		documentoRepository.deleteById(id);
 		
@@ -1568,6 +1824,7 @@ public class DocumentoService {
 		
 		documentoDTO.setUsuarioId(documento.getUsuario().getId());
 		documentoDTO.setConteudo(documento.getConteudo());
+		documentoDTO.setOrigem(documento.getOrigem());
 		documentoDTO.setId(documento.getId());
 		documentoDTO.setTipoDocumentoId(documento.getTipoDocumento().getId());
 		
@@ -1602,6 +1859,9 @@ public class DocumentoService {
 			ReuniaoDTO reuniaoDto = new ReuniaoDTO();
 			reuniaoDto.setColegiadoId(documento.getReuniao().getColegiado().getId());
 			reuniaoDto.setId(documento.getReuniao().getId());
+			reuniaoDto.setNumero(documento.getReuniao().getNumero());
+			reuniaoDto.setTipo(documento.getReuniao().getTipo());
+			reuniaoDto.setHora(documento.getReuniao().getHora());
 			documentoDTO.setReuniao(reuniaoDto);
 			
 			if(documento.getMensagemGeral() == null && !documento.getMensagemGeral()) {
@@ -1614,6 +1874,17 @@ public class DocumentoService {
 				for(UsuarioReuniao usuarioReuniao: usuariosReuniao) {
 					destinatariosIds.add(usuarioReuniao.getUsuario().getId());
 				}
+			}
+			
+			documentoDTO.setFaltasIds(new ArrayList<Long>());
+			List<GenericListObject> faltasExistentes = new ArrayList<GenericListObject>();
+			GenericListObjectSpecification genSpec = new GenericListObjectSpecification();
+			faltasExistentes
+			  = genericListObjectRepository.findAll(Specification.where(
+					  genSpec.findByDocumento(documento)
+				));
+			for(GenericListObject falta : faltasExistentes) {
+				documentoDTO.getFaltasIds().add(falta.getValue());
 			}
 		}
 		
@@ -1697,6 +1968,7 @@ public class DocumentoService {
 		}
 		
 		documento.setConteudo(documentoDTO.getConteudo());
+		documento.setOrigem(documentoDTO.getOrigem());
 		
 		if(documentoDTO.getDataCriacao() == null) {
 			documento.setDataCriacao(calendar.getTime());
@@ -1724,6 +1996,10 @@ public class DocumentoService {
 			Reuniao reuniao = new Reuniao();
 			Colegiado colegiado = colegiadoService.findById(documentoDTO.getReuniao().getColegiadoId());
 			reuniao.setColegiado(colegiado);
+			reuniao.setTipo(documentoDTO.getReuniao().getTipo());
+			reuniao.setNumero(documentoDTO.getReuniao().getNumero());
+			reuniao.setHora(documentoDTO.getReuniao().getHora());
+			reuniao.setId(documentoDTO.getReuniao().getId());
 			documento.setReuniao(reuniao);
 		}
 		
@@ -2124,15 +2400,139 @@ public class DocumentoService {
     		Paragraph paragrafoFinal = new Paragraph("Fortaleza, "+ calendar.get(Calendar.DAY_OF_MONTH) + " de " + getMes(calendar) + " de " + calendar.get(Calendar.YEAR) + ".");
     		document.add(paragrafoFinal);
     		
+//    		document.add(new Phrase("\n"));
+//    		document.add(new Phrase("\n"));
+//    		
+//    		Paragraph nomeParagrafo = new Paragraph();
+//    		Phrase nome = new Phrase();
+//    		nome.getFont().setStyle(Font.BOLD);
+//    		nome.add(documento.getUsuario().getNome());
+//    		nomeParagrafo.add(nome);
+//			document.add(nomeParagrafo);
+			
+			return writer.getPageNumber();
+			
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+		return 0;
+		
+	}
+	
+	private int generateParecerBody(PdfWriter writer, Document document, Documento documento, Cargo cargo, List<Long> destinatariosIds, Boolean isMensagemGeral, Boolean isMensagemSetor) {
+		
+		try {
+			
+    		document.add(new Phrase("\n"));
+    		document.add(new Phrase("\n"));
+    		document.add(new Phrase("\n"));
     		document.add(new Phrase("\n"));
     		document.add(new Phrase("\n"));
     		
-    		Paragraph nomeParagrafo = new Paragraph();
-    		Phrase nome = new Phrase();
-    		nome.getFont().setStyle(Font.BOLD);
-    		nome.add(documento.getUsuario().getNome());
-    		nomeParagrafo.add(nome);
-			document.add(nomeParagrafo);
+    		Paragraph declaracao = new Paragraph("PARECER");
+    		declaracao.setAlignment(Element.ALIGN_CENTER);
+    		declaracao.getFont().setStyle(Font.BOLD);
+    		document.add(declaracao);
+    		
+    		document.add(new Phrase("\n"));
+    		
+    		Paragraph paragraphTable = new Paragraph();
+    		PdfPTable mainTable = new PdfPTable(2);
+    		mainTable.setWidthPercentage(100.0f);
+    		
+    		// First table
+    		PdfPCell firstTableCell = new PdfPCell();
+            firstTableCell.setBorder(PdfPCell.NO_BORDER);
+            PdfPTable firstTable = new PdfPTable(1);
+            firstTable.setWidthPercentage(60);
+            
+            Paragraph paragraphProcesso = new Paragraph();
+    		Phrase labelNumeroProcesso = new Phrase("PROCESSO Nº:");
+    		labelNumeroProcesso.getFont().setStyle(Font.BOLD);
+    		paragraphProcesso.add(labelNumeroProcesso);
+    		PdfPCell celulaProcesso = new PdfPCell(paragraphProcesso);
+    		firstTable.addCell(celulaProcesso);
+            
+    		Paragraph paragraphInteressado = new Paragraph();
+    		Phrase labelInteressado = new Phrase("INTERESSADO:");
+    		labelInteressado.getFont().setStyle(Font.BOLD);
+    		paragraphInteressado.add(labelInteressado);
+    		PdfPCell celulaInteressado = new PdfPCell(paragraphInteressado);
+    		firstTable.addCell(celulaInteressado);
+            
+    		Paragraph paragraphAssunto = new Paragraph();
+    		Phrase labelAssunto = new Phrase("ASSUNTO:");
+    		labelAssunto.getFont().setStyle(Font.BOLD);
+    		paragraphAssunto.add(labelAssunto);
+    		PdfPCell celulaAssunto = new PdfPCell(paragraphAssunto);
+    		firstTable.addCell(celulaAssunto);
+    		
+    		Paragraph paragraphOrigem = new Paragraph();
+    		Phrase labelOrigem = new Phrase("ORIGEM:");
+    		labelOrigem.getFont().setStyle(Font.BOLD);
+    		paragraphOrigem.add(labelOrigem);
+    		PdfPCell celulaOrigem = new PdfPCell(paragraphOrigem);
+    		firstTable.addCell(celulaOrigem);
+    		
+    		Paragraph paragraphData = new Paragraph();
+    		Phrase labelData = new Phrase("DATA DE EMISSÃO:");
+    		labelData.getFont().setStyle(Font.BOLD);
+    		paragraphData.add(labelData);
+    		PdfPCell celulaData = new PdfPCell(paragraphData);
+    		firstTable.addCell(celulaData);
+    		
+            firstTable.setHorizontalAlignment(Element.ALIGN_LEFT);
+            firstTableCell.addElement(firstTable);
+            mainTable.addCell(firstTableCell);
+            
+            // Second table
+            PdfPCell secondTableCell = new PdfPCell();
+            secondTableCell.setBorder(PdfPCell.NO_BORDER);
+            PdfPTable secondTable = new PdfPTable(1);
+            secondTable.setWidthPercentage(142);
+            
+            Paragraph paragraphConteudoProcesso = new Paragraph();
+    		Phrase labelConteudoProcesso = new Phrase(documento.getIdentificador());
+    		paragraphConteudoProcesso.add(labelConteudoProcesso);
+    		PdfPCell celulaConteudoProcesso = new PdfPCell(paragraphConteudoProcesso);
+    		secondTable.addCell(celulaConteudoProcesso);
+    		
+    		Paragraph paragraphConteudoInteressado = new Paragraph();
+    		Phrase conteudoInteressado = new Phrase(documento.getUsuario().getNome());
+    		paragraphConteudoInteressado.add(conteudoInteressado);
+    		PdfPCell celulaConteudoInteressado = new PdfPCell(paragraphConteudoInteressado);
+    		secondTable.addCell(celulaConteudoInteressado);
+            
+    		Paragraph paragraphConteudoAssunto = new Paragraph();
+    		Phrase conteudoAssunto = new Phrase(documento.getAssunto());
+    		paragraphConteudoAssunto.add(conteudoAssunto);
+    		PdfPCell celulaConteudoAssunto = new PdfPCell(paragraphConteudoAssunto);
+    		secondTable.addCell(celulaConteudoAssunto);
+    		
+    		Paragraph paragraphConteudoOrigem = new Paragraph();
+    		Phrase conteudoOrigem = new Phrase(documento.getOrigem() == null ? " " : documento.getOrigem());
+    		paragraphConteudoOrigem.add(conteudoOrigem);
+    		PdfPCell celulaConteudoOrigem = new PdfPCell(paragraphConteudoOrigem);
+    		secondTable.addCell(celulaConteudoOrigem);
+    		
+    		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+    		Paragraph paragraphConteudoEmissao = new Paragraph();
+    		Phrase conteudoEmissao = new Phrase(sdf.format(documento.getDataCriacao()));
+    		paragraphConteudoEmissao.add(conteudoEmissao);
+    		PdfPCell celulaConteudoEmissao = new PdfPCell(paragraphConteudoEmissao);
+    		secondTable.addCell(celulaConteudoEmissao);
+            
+            secondTable.setHorizontalAlignment(Element.ALIGN_RIGHT);
+            secondTableCell.addElement(secondTable);
+            mainTable.addCell(secondTableCell);
+            
+            paragraphTable.add(mainTable);
+            document.add(paragraphTable);
+    		
+            document.add(new Phrase("\n"));
+            
+    		document = generateMainText(documento, document, writer);
 			
 			return writer.getPageNumber();
 			
@@ -2259,22 +2659,22 @@ public class DocumentoService {
             
     		document = generateMainText(documento, document, writer);
     		
-    		document.add(new Phrase("\n"));
-    		document.add(new Phrase("\n"));
-    		
-    		Paragraph nomeParagrafo = new Paragraph();
-    		Phrase nome = new Phrase();
-    		nome.add(documento.getUsuario().getNome());
-    		nomeParagrafo.add(nome);
-    		nomeParagrafo.setAlignment(Element.ALIGN_CENTER);
-			document.add(nomeParagrafo);
-			
-			Paragraph cargoParagraph = new Paragraph();
-    		Phrase cargoNome = new Phrase();
-    		cargoNome.add(cargo.getNome() + " do(a) " + cargo.getSetor().getNome());
-    		cargoParagraph.add(cargoNome);
-    		cargoParagraph.setAlignment(Element.ALIGN_CENTER);
-			document.add(cargoParagraph);
+//    		document.add(new Phrase("\n"));
+//    		document.add(new Phrase("\n"));
+//    		
+//    		Paragraph nomeParagrafo = new Paragraph();
+//    		Phrase nome = new Phrase();
+//    		nome.add(documento.getUsuario().getNome());
+//    		nomeParagrafo.add(nome);
+//    		nomeParagrafo.setAlignment(Element.ALIGN_CENTER);
+//			document.add(nomeParagrafo);
+//			
+//			Paragraph cargoParagraph = new Paragraph();
+//    		Phrase cargoNome = new Phrase();
+//    		cargoNome.add(cargo.getNome() + " do(a) " + cargo.getSetor().getNome());
+//    		cargoParagraph.add(cargoNome);
+//    		cargoParagraph.setAlignment(Element.ALIGN_CENTER);
+//			document.add(cargoParagraph);
 			
 			return writer.getPageNumber();
 			
@@ -2327,19 +2727,19 @@ public class DocumentoService {
 			paragrafoFinal.add(localEData);
 			document.add(paragrafoFinal);
 			
-			document.add(new Phrase("\n"));
-			document.add(new Phrase("\n"));
-			document.add(new Phrase("\n"));
-			
-			Paragraph nomeUsuario = new Paragraph(documento.getUsuario().getNome());
-			nomeUsuario.setAlignment(Element.ALIGN_CENTER);
-			document.add(nomeUsuario);
-			
-			Paragraph funcaoUsuario = new Paragraph();
-			funcaoUsuario.setAlignment(Element.ALIGN_CENTER);
-			funcaoUsuario.getFont().setStyle(Font.BOLD);
-			funcaoUsuario.add(cargo.getNome());
-			document.add(funcaoUsuario);
+//			document.add(new Phrase("\n"));
+//			document.add(new Phrase("\n"));
+//			document.add(new Phrase("\n"));
+//			
+//			Paragraph nomeUsuario = new Paragraph(documento.getUsuario().getNome());
+//			nomeUsuario.setAlignment(Element.ALIGN_CENTER);
+//			document.add(nomeUsuario);
+//			
+//			Paragraph funcaoUsuario = new Paragraph();
+//			funcaoUsuario.setAlignment(Element.ALIGN_CENTER);
+//			funcaoUsuario.getFont().setStyle(Font.BOLD);
+//			funcaoUsuario.add(cargo.getNome());
+//			document.add(funcaoUsuario);
 			
 			return writer.getPageNumber();
 			

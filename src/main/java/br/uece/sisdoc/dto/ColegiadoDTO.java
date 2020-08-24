@@ -11,6 +11,8 @@ public class ColegiadoDTO {
 	String descricao;
 	
 	List<Long> membrosIds;
+	
+	Long setorId;
 
 	public Long getId() {
 		return id;
@@ -42,6 +44,14 @@ public class ColegiadoDTO {
 
 	public void setMembrosIds(List<Long> membrosIds) {
 		this.membrosIds = membrosIds;
+	}
+
+	public Long getSetorId() {
+		return setorId;
+	}
+
+	public void setSetorId(Long setorId) {
+		this.setorId = setorId;
 	}
 	
 }
